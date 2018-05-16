@@ -116,7 +116,7 @@ try代码如果发生错误，执行过程会自动跳转到catch子句，然后
 
 
 | 匿名函数（闭包）  |   作用域链   |   对象   | 类型   |
-| :-------- | :--------| :------ |
+| :-------- | :--------| :------ | :------ |
 | [[Scope]]  |   0  |  this/obj1/obj2/value1/value2/arguments | 闭包活动对象 |
 | [[Scope]]  |   1  |  this/arguments/id  | fn活动对象 |
 | [[Scope]]  |   2  |  this/window/fn | 全局对象  |
