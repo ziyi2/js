@@ -155,3 +155,138 @@ try代码如果发生错误，执行过程会自动跳转到catch子句，然后
 - 6. 通常来说，需要访问多次的对象成员、数组元素、跨作用域变量可以保存在局部变量中从而提升js执行效率。
 
 
+## 算法和流程控制
+
+代码数量少并不意味着运行速度就快。代码数量多也不以为这运行速度一定慢。
+
+### 循环
+
+代码的执行时间大部分消耗在循环中。
+
+#### 循环类型
+
+- for
+- while
+- do...while
+- for...in...（性能最差）
+- for...of...（可以想象性能就算优化过也会比普通循环速度慢）
+
+> for...in...速度慢的原因是不仅遍历实例的属性还会遍历原型链中继承而来的属性。
+
+#### 循环性能
+
+
+##### 性能测试
+
+``` html
+<script>
+  let arr = new Array(1).fill(1)
+  
+  // for测试
+  for(let i=0; i<10; i++) {
+    console.time('for')
+    for(let i=0, len=arr.length; i<len; i++) {
+      arr[i]
+    }
+    console.timeEnd('for')
+  }
+  // for...in测试
+  for(let i=0; i<10; i++) {
+    console.time('for...in...')
+    for(let index in arr) {
+      arr[index]
+    }
+    console.timeEnd('for...in...')
+  }
+  // for...of测试
+  for(let i=0; i<10; i++) {
+    console.time('for...of...')
+    for(let index of arr.keys()) {
+      arr[index]
+    }
+    console.timeEnd('for...of...')
+  }
+
+
+/*
+  for: 0.007080078125ms
+  js.html:23 for: 0.004150390625ms
+  js.html:23 for: 0.001953125ms
+  js.html:23 for: 0.002685546875ms
+  js.html:23 for: 0.001953125ms
+  js.html:23 for: 0.0029296875ms
+  js.html:23 for: 0.004150390625ms
+  js.html:23 for: 0.0029296875ms
+  2js.html:23 for: 0.001953125ms
+
+  js.html:33 for...in...: 0.011962890625ms
+  2js.html:33 for...in...: 0.005859375ms
+  js.html:33 for...in...: 0.008056640625ms
+  js.html:33 for...in...: 0.005859375ms
+  js.html:33 for...in...: 0.0048828125ms
+  js.html:33 for...in...: 0.003662109375ms
+  js.html:33 for...in...: 0.004150390625ms
+  js.html:33 for...in...: 0.0048828125ms
+  js.html:33 for...in...: 0.003173828125ms
+
+  js.html:42 for...of...: 0.01416015625ms
+  js.html:42 for...of...: 0.01806640625ms
+  js.html:42 for...of...: 0.003662109375ms
+  js.html:42 for...of...: 0.005126953125ms
+  2js.html:42 for...of...: 0.0048828125ms
+  js.html:42 for...of...: 0.004150390625ms
+  js.html:42 for...of...: 0.003662109375ms
+  js.html:42 for...of...: 0.005126953125ms
+  js.html:42 for...of...: 0.004150390625ms
+*/
+</script>
+
+```
+
+> 数量极少的时候for速度最快，for...in...和for...of...性能差不多，在循环该测试是在chrome浏览器下。
+
+``` html
+<script>
+
+/*
+for: 4.967041015625ms
+js.html:22 for: 4.348876953125ms
+js.html:22 for: 0.0458984375ms
+js.html:22 for: 0.045166015625ms
+js.html:22 for: 0.05224609375ms
+js.html:22 for: 0.044677734375ms
+js.html:22 for: 0.051025390625ms
+2js.html:22 for: 0.044921875ms
+js.html:22 for: 0.0498046875ms
+
+js.html:30 for...in...: 14.004150390625ms
+js.html:30 for...in...: 17.953125ms
+js.html:30 for...in...: 10.078857421875ms
+js.html:30 for...in...: 10.843994140625ms
+js.html:30 for...in...: 10.205810546875ms
+js.html:30 for...in...: 9.93798828125ms
+js.html:30 for...in...: 11.42626953125ms
+js.html:30 for...in...: 10.885986328125ms
+js.html:30 for...in...: 9.726806640625ms
+js.html:30 for...in...: 10.239013671875ms
+
+js.html:38 for...of...: 5.726318359375ms
+js.html:38 for...of...: 10.739990234375ms
+js.html:38 for...of...: 0.39697265625ms
+js.html:38 for...of...: 0.39404296875ms
+js.html:38 for...of...: 0.358154296875ms
+js.html:38 for...of...: 0.39013671875ms
+js.html:38 for...of...: 0.313232421875ms
+js.html:38 for...of...: 0.344970703125ms
+js.html:38 for...of...: 0.341064453125ms
+js.html:38 for...of...: 0.346923828125ms
+*/
+</script>
+
+```
+
+> 当循环次数10000甚至是100000以上时，这里以100000次为例，发现for循环性能明显高于for...of，而for...of的性能则又高于for...in...。但是在循环10000次以下的时候，又发现for...of的性能略低于for...in...，但是for...of...的性能是有极大优化空间的，所以for...of和for...in还是推荐使用for...of...。
+
+
+
+
