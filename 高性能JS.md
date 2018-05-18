@@ -178,6 +178,8 @@ try代码如果发生错误，执行过程会自动跳转到catch子句，然后
 
 ##### 性能测试
 
+###### 循环次数较少
+
 ``` html
 <script>
   let arr = new Array(1).fill(1)
@@ -210,34 +212,34 @@ try代码如果发生错误，执行过程会自动跳转到catch子句，然后
 
 /*
   for: 0.007080078125ms
-  js.html:23 for: 0.004150390625ms
-  js.html:23 for: 0.001953125ms
-  js.html:23 for: 0.002685546875ms
-  js.html:23 for: 0.001953125ms
-  js.html:23 for: 0.0029296875ms
-  js.html:23 for: 0.004150390625ms
-  js.html:23 for: 0.0029296875ms
-  2js.html:23 for: 0.001953125ms
+  for: 0.004150390625ms
+  for: 0.001953125ms
+  for: 0.002685546875ms
+  for: 0.001953125ms
+  for: 0.0029296875ms
+  for: 0.004150390625ms
+  for: 0.0029296875ms
+  for: 0.001953125ms
 
-  js.html:33 for...in...: 0.011962890625ms
-  2js.html:33 for...in...: 0.005859375ms
-  js.html:33 for...in...: 0.008056640625ms
-  js.html:33 for...in...: 0.005859375ms
-  js.html:33 for...in...: 0.0048828125ms
-  js.html:33 for...in...: 0.003662109375ms
-  js.html:33 for...in...: 0.004150390625ms
-  js.html:33 for...in...: 0.0048828125ms
-  js.html:33 for...in...: 0.003173828125ms
+  for...in...: 0.011962890625ms
+  for...in...: 0.005859375ms
+  for...in...: 0.008056640625ms
+  for...in...: 0.005859375ms
+  for...in...: 0.0048828125ms
+  for...in...: 0.003662109375ms
+  for...in...: 0.004150390625ms
+  for...in...: 0.0048828125ms
+  for...in...: 0.003173828125ms
 
-  js.html:42 for...of...: 0.01416015625ms
-  js.html:42 for...of...: 0.01806640625ms
-  js.html:42 for...of...: 0.003662109375ms
-  js.html:42 for...of...: 0.005126953125ms
-  2js.html:42 for...of...: 0.0048828125ms
-  js.html:42 for...of...: 0.004150390625ms
-  js.html:42 for...of...: 0.003662109375ms
-  js.html:42 for...of...: 0.005126953125ms
-  js.html:42 for...of...: 0.004150390625ms
+  for...of...: 0.01416015625ms
+  for...of...: 0.01806640625ms
+  for...of...: 0.003662109375ms
+  for...of...: 0.005126953125ms
+  for...of...: 0.0048828125ms
+  for...of...: 0.004150390625ms
+  for...of...: 0.003662109375ms
+  for...of...: 0.005126953125ms
+  for...of...: 0.004150390625ms
 */
 </script>
 
@@ -245,41 +247,44 @@ try代码如果发生错误，执行过程会自动跳转到catch子句，然后
 
 > 数量极少的时候for速度最快，for...in...和for...of...性能差不多，在循环该测试是在chrome浏览器下。
 
+###### 循环次数较多
+
+
 ``` html
 <script>
 
 /*
-for: 4.967041015625ms
-js.html:22 for: 4.348876953125ms
-js.html:22 for: 0.0458984375ms
-js.html:22 for: 0.045166015625ms
-js.html:22 for: 0.05224609375ms
-js.html:22 for: 0.044677734375ms
-js.html:22 for: 0.051025390625ms
-2js.html:22 for: 0.044921875ms
-js.html:22 for: 0.0498046875ms
+  for: 4.967041015625ms
+  for: 4.348876953125ms
+  for: 0.0458984375ms
+  for: 0.045166015625ms
+  for: 0.05224609375ms
+  for: 0.044677734375ms
+  for: 0.051025390625ms
+  for: 0.044921875ms
+  for: 0.0498046875ms
 
-js.html:30 for...in...: 14.004150390625ms
-js.html:30 for...in...: 17.953125ms
-js.html:30 for...in...: 10.078857421875ms
-js.html:30 for...in...: 10.843994140625ms
-js.html:30 for...in...: 10.205810546875ms
-js.html:30 for...in...: 9.93798828125ms
-js.html:30 for...in...: 11.42626953125ms
-js.html:30 for...in...: 10.885986328125ms
-js.html:30 for...in...: 9.726806640625ms
-js.html:30 for...in...: 10.239013671875ms
+  for...in...: 14.004150390625ms
+  for...in...: 17.953125ms
+  for...in...: 10.078857421875ms
+  for...in...: 10.843994140625ms
+  for...in...: 10.205810546875ms
+  for...in...: 9.93798828125ms
+  for...in...: 11.42626953125ms
+  for...in...: 10.885986328125ms
+  for...in...: 9.726806640625ms
+  for...in...: 10.239013671875ms
 
-js.html:38 for...of...: 5.726318359375ms
-js.html:38 for...of...: 10.739990234375ms
-js.html:38 for...of...: 0.39697265625ms
-js.html:38 for...of...: 0.39404296875ms
-js.html:38 for...of...: 0.358154296875ms
-js.html:38 for...of...: 0.39013671875ms
-js.html:38 for...of...: 0.313232421875ms
-js.html:38 for...of...: 0.344970703125ms
-js.html:38 for...of...: 0.341064453125ms
-js.html:38 for...of...: 0.346923828125ms
+  for...of...: 5.726318359375ms
+  for...of...: 10.739990234375ms
+  for...of...: 0.39697265625ms
+  for...of...: 0.39404296875ms
+  for...of...: 0.358154296875ms
+  for...of...: 0.39013671875ms
+  for...of...: 0.313232421875ms
+  for...of...: 0.344970703125ms
+  for...of...: 0.341064453125ms
+  for...of...: 0.346923828125ms
 */
 </script>
 
@@ -288,5 +293,225 @@ js.html:38 for...of...: 0.346923828125ms
 > 当循环次数10000甚至是100000以上时，这里以100000次为例，发现for循环性能明显高于for...of，而for...of的性能则又高于for...in...。但是在循环10000次以下的时候，又发现for...of的性能略低于for...in...，但是for...of...的性能是有极大优化空间的，所以for...of和for...in还是推荐使用for...of...。
 
 
+#####  使用for循环仍然可以优化
 
 
+``` html
+<script>
+  let arr = new Array(100000).fill(1)
+
+  // for测试 ++测试
+  console.time('for ++')
+  for(let i=0, len=arr.length; i<len; i++) {
+    arr[i]
+  }
+  console.timeEnd('for ++')
+
+  // for测试 -- 测试
+  console.time('for --')
+  for(let i=arr.length; i--; ) {
+    arr[i]
+  }
+  console.timeEnd('for --')
+
+/*
+for ++: 1.636962890625ms
+for --: 1.109130859375ms
+*/
+</script>
+
+```
+
+> 但是到百万级别次数甚至以上的时候发现居然还是++耗时少，因此这里觉得没有必要对++ --过多执着。
+
+
+##### 减少迭代次数
+
+循环的性能主要和以下两者有关
+
+- 每次迭代处理的事务
+- 迭代的次数
+
+事务可能很难被减少，但是迭代的次数是可以通过代码减少的，一种有效的办法就是使用“Duff装置”（Duff's Device），Duff装置是一种循环体展开技术，它使得一次迭代实际上执行了多次迭代的操作
+
+``` html
+<script>
+  function duffDevice(arr) {
+    let length = arr.length
+    let iterations = Math.floor(length / 8)
+    let remain = length % 8
+    let index = 0
+    
+    // 执行剩余次数
+    if(remain) {
+      do {
+        arr[index ++]
+      } while(--remain)
+    } 
+
+    if(!iterations) return
+    
+    // 8次迭代转换成1次
+    do {
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+    } while(--iterations)
+  }
+</script>
+
+```
+
+
+``` html
+<script>
+  function duffDevice(arr) {
+    let length = arr.length
+    let iterations = Math.floor(length / 8)
+    let remain = length % 8
+    let index = 0
+    // 执行剩余次数
+    if(remain) {
+      do {
+        arr[index ++]
+      } while(--remain)
+    } 
+    if(!iterations) return
+    // 8次迭代转换成1次
+    do {
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+      arr[index ++]
+    } while(--iterations)
+  }
+
+
+
+let arr = new Array(1000000).fill(1)
+// for测试 ++测试
+console.time('for ++')
+for(let i=0, len=arr.length; i<len; i++) {
+  arr[i]
+}
+console.timeEnd('for ++')
+
+console.time('for ++')
+for(let i=0, len=arr.length; i<len; i++) {
+  arr[i]
+}
+console.timeEnd('for ++')
+
+console.time('for ++')
+for(let i=0, len=arr.length; i<len; i++) {
+  arr[i]
+}
+console.timeEnd('for ++')
+
+// Duff 测试
+console.time('Duff Device')
+duffDevice(arr)
+console.timeEnd('Duff Device')
+
+console.time('Duff Device')
+duffDevice(arr)
+console.timeEnd('Duff Device')
+
+console.time('Duff Device')
+duffDevice(arr)
+console.timeEnd('Duff Device')
+
+/*
+
+for ++: 3.614013671875ms
+for ++: 3.067138671875ms
+for ++: 2.9521484375ms
+Duff Device: 2.632080078125ms
+Duff Device: 1.958740234375ms
+Duff Device: 0.416015625ms
+*/
+
+</script>
+```
+
+> 发现使用Duff装置后确实能提升性能。
+
+
+##### 基于函数的迭代
+
+需要注意类似于forEach等方法，尽管基于函数的迭代提供了更为便利的迭代方法，但仍然比基于循环的迭代要慢，因为每个数组项调用外部方法打来的开销是速度慢的主要原因。
+
+
+``` html
+<script>
+  
+let arr = new Array(1000000).fill(1)
+
+// for测试 ++测试
+console.time('for ++')
+for(let i=0, len=arr.length; i<len; i++) {
+  arr[i]
+}
+console.timeEnd('for ++')
+
+console.time('for ++')
+for(let i=0, len=arr.length; i<len; i++) {
+  arr[i]
+}
+console.timeEnd('for ++')
+
+console.time('for ++')
+for(let i=0, len=arr.length; i<len; i++) {
+  arr[i]
+}
+console.timeEnd('for ++')
+
+
+console.time('map')
+arr.map(item => item)
+console.timeEnd('map')
+
+console.time('map')
+arr.map(item => item)
+console.timeEnd('map')
+
+console.time('map')
+arr.map(item => item)
+console.timeEnd('map')
+
+
+console.time('forEach')
+arr.forEach(item => item)
+console.timeEnd('forEach')
+
+console.time('forEach')
+arr.forEach(item => item)
+console.timeEnd('forEach')
+
+console.time('forEach')
+arr.forEach(item => item)
+console.timeEnd('forEach')
+
+/*
+for ++: 4.32177734375ms
+for ++: 4.050048828125ms
+for ++: 4.538818359375ms
+map: 175.8759765625ms
+map: 179.677001953125ms
+map: 186.087890625ms
+forEach: 17.961181640625ms
+forEach: 18.033935546875ms
+forEach: 17.775146484375ms
+*/
+</script>
+
+```
