@@ -453,7 +453,7 @@ Duff Device: 0.416015625ms
 
 ``` html
 <script>
-  
+
 let arr = new Array(1000000).fill(1)
 
 // for测试 ++测试
@@ -515,3 +515,51 @@ forEach: 17.775146484375ms
 </script>
 
 ```
+
+### 条件语句
+
+在条件比较多的情况下switch语句比if-else性能高。
+
+> 大多数语言对switch语句的实现采用branch table（分支表）索引来进行优化，同时在js中switch语句比较值采用全等操作符，不会发生类型转换的性能损耗。当判断多余两个离散值时使用switch是更佳选择。
+
+#### 优化if-else
+
+将最可能出现的条件放在最前面，从而减少条件判断次数
+
+
+### 查找表
+
+if-else和switch比使用查找表慢很多，javascript中可以使用数组和普通对象来构建查找表，特别是在条件语句数量很大的时候。
+
+``` html
+<script>
+  const value = 3
+  switch(value) {
+    case 0:
+    return 0
+    case 1:
+    return 1
+    case 2:
+    return 2
+    case 3:
+    return 3
+    case 4:
+    return 4
+    case 5:
+    return 5
+    case 6:
+    return 6
+    defualt:
+    return -1
+  }
+  // 建立数组作为查找表进行查找操作
+  const arr = [0,1,2,3,4,5,6]
+  arr[value]
+</script>
+```
+
+> 整个过程变成数组查询或者对象成员查询，不用书写任何判断语句。
+
+### 递归
+
+
