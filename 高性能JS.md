@@ -575,3 +575,108 @@ UI线程：大多数浏览器让一个单线程共用于执行JavaScript和更�
 
 ### 浏览器UI线程
 
+用于执行JavaScript和更新用户界面的进程通常被称为“浏览器UI线程”。 UI线程的工作基于一个简单的队列系统，任务会被保存在队列中直到进程空闲（空闲了以后会把下一个任务提取出来运行，任务包括执行JavaScript代码、执行UI更新[包括重绘和重排]）。
+
+#### 运行多久合理
+
+单个JavaScript操作花费的总时间最大值不应该超过100ms，超过100ms用户会觉得自己与界面失去联系。
+
+#### 使用定时器让出时间片段
+
+如果有些任务确实需要超过100ms才能执行完毕，那么应该使用时间切片分段完成执行任务，从而在时间切片的空闲中可以使得UI有时间段进行更新（执行JavaScript的同时间断性的让出UI线程的控制权用来更新用户界面）。
+
+> 执行JavaScript(固定的时间段) -> 更新用户界面 -> 执行JavaScript(固定的时间段)-> 更新用户界面 ...
+
+为了在执行耗时极大的JavaScript代码时可以让出UI线程的控制权，可以使用定时器。使用setTimeout或setInterval定时器时，会告诉JavaScript引擎先等待一段时间（这段时间可以进行其他队列任务的操作，包括UI界面更新等），然后添加一个JavaScript任务到UI线程队列。需要注意使用定时器的定时时间只是告知何时被加入UI线程的任务队列，并不是何时去执行这段代码，因此真正执行定时器任务的时间一定是大于等于定时时间。
+
+
+``` html
+
+<script>
+  console.time('setTimeout 10ms')
+  setTimeout(() => {
+    console.timeEnd('setTimeout 10ms')
+  }, 10)
+
+  console.time('setTimeout 2ms')
+  setTimeout(() => {
+    console.timeEnd('setTimeout 2ms')
+  }, 2)
+
+  console.time('setTimeout 0ms')
+  setTimeout(() => {
+    console.timeEnd('setTimeout 0ms')
+  }, 0)
+
+/*
+setTimeout 0ms: 16.01416015625ms
+setTimeout 2ms: 17.387939453125ms
+setTimeout 10ms: 18.31591796875ms
+*/
+</script>
+```
+
+> 真正执行的时间一定是大于定时时间的。
+
+
+
+``` html
+
+<script>
+  console.time('setTimeout 10ms')
+  setTimeout(() => {
+    console.timeEnd('setTimeout 10ms')
+  }, 10)
+
+  console.time('setTimeout 0ms')
+  setTimeout(() => {
+    console.timeEnd('setTimeout 0ms')
+  }, 0)
+
+  console.time('setTimeout 2ms')
+  setTimeout(() => {
+    console.timeEnd('setTimeout 2ms')
+  }, 2)
+
+  console.time('map')
+  let arr = new Array(1000000).fill(1)
+  arr.map(item => item)
+  console.timeEnd('map')
+
+  /**
+  map: 226.447998046875ms
+  setTimeout 0ms: 244.458984375ms
+  setTimeout 2ms: 244.644287109375ms
+  setTimeout 10ms: 244.8408203125ms
+  */
+</script>
+```
+
+> 此时基本上定时器失去了定时能力，因为三个定时任务被加入队列任务后，都必须等待JavaScript的map循环执行完毕后才能执行，由于定时时间已经超时，因此三个定时任务一等到UI线程空闲就立马一个个排队执行，需要注意的是加入队列的执行顺序仍然按照定时时间的长短来决定。
+
+
+``` html
+<script>
+  let counter = 0
+  console.time('setInterval 10ms')
+  let time = setInterval(() => {
+    counter ++
+    console.timeEnd('setInterval 10ms')
+    
+
+    let arr = new Array(1000000).fill(1)
+    arr.map(item => item)
+
+    console.time('setInterval 10ms')
+
+    if(counter > 5) {
+      clearInterval(time)
+    }
+  }, 10)
+</script>
+
+```
+
+> setInterval函数会重复添加JavaScript任务到UI队列，需要注意不同的地方是如果UI队列中已经存在同一个setInterval函数创建的任务，那么后续相同的任务不会被添加到UI队列中(一定是当前setInterval函数创建的任务执行完毕后才会新添加任务的UI队列)。
+
+
