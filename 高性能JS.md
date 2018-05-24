@@ -680,3 +680,70 @@ setTimeout 10ms: 18.31591796875ms
 > setInterval函数会重复添加JavaScript任务到UI队列，需要注意不同的地方是如果UI队列中已经存在同一个setInterval函数创建的任务，那么后续相同的任务不会被添加到UI队列中(一定是当前setInterval函数创建的任务执行完毕后才会新添加任务的UI队列)。
 
 
+### 使用定时器处理数组
+
+- 处理过程不需要同步
+- 数据不需要按顺序处理
+
+如果满足以上两者条件，可以使用定时器分解任务（防止大数据量数组计算导致UI队列无法更新视图产生停滞现象）。
+
+> 需要注意UI更新任务的时间如果小于25ms会不够用，因此定时的时长至少应大于25ms。
+
+之前所说的JavaScript代码的执行时长不应该超过100ms，超过100ms用户会觉得自己与界面失去联系。如果需要处理大数据量数组，可以使用定时器保持50ms左右的运行时间，保证不会影响用户体验（50ms的时间足够UI更新视图）。
+
+可以通过记录运行时间来处理
+
+
+``` html
+<script>
+
+  // 每50ms执行一次数组计算，每50ms执行一次视图更新
+  // 使用定时器切分时间片
+  function timeQueueProcess(items, process, callback) {
+
+    let todo = items.concat()
+
+    // 数组深拷贝
+    setTimeout(() => {
+
+      let start = +new Date()
+      do{
+        console.time('shift')
+        process(todo.shift())
+        console.timeEnd('shift')
+      // 执行时间控制在50ms左右  
+      } while(todo.length > 0 && (+new Date() - start < 50))
+      
+      // 如果此次items没有执行完毕
+      // 让出UI队列的控制权给UI更新视图
+      // 50ms的时间足够视图更新  
+      console.log(todo)
+      todo.length ? setTimeout(() => {
+        timeQueueProcess(todo, process, callback)
+      }, 0) : callback(items)    
+    }, 0)
+  }
+
+
+  let array = new Array(100000).fill(1)
+
+  timeQueueProcess(array, (item) => { item }, () => {
+    console.log('定时器任务执行完毕')
+  })
+
+  let bool = true
+  let $button = document.getElementById('button')
+  let $div = document.getElementById('div')
+  $button.onclick = () => {
+    $div.style.backgroundColor = bool ?  'blue' : 'red'
+    bool = !bool
+  }
+
+</script>
+```
+
+> 需要注意这种使用方式是页面上只有一个定时器的时候比较适用，如果有多个定时器容易出现性能问题，因为UI线程只有一个。
+
+### Web Workers
+
+通过Web Workers API可以使代码运行在UI线程之外。JavaScript和UI共享同一个进程，所以可以互相访问，但是Web Workers API由于创建独立的线程，因此和UI线程之间需要通过通信才能传递信息，UI线程中的大数据量处理可以通知Web Workers API进行处理，处理完毕后又可以返回处理结果告知UI线程进行处理，需要注意的是Web Workers API的兼容性很差，只有在IE11中兼容。
