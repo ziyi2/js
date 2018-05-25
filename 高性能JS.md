@@ -747,3 +747,63 @@ setTimeout 10ms: 18.31591796875ms
 ### Web Workers
 
 通过Web Workers API可以使代码运行在UI线程之外。JavaScript和UI共享同一个进程，所以可以互相访问，但是Web Workers API由于创建独立的线程，因此和UI线程之间需要通过通信才能传递信息，UI线程中的大数据量处理可以通知Web Workers API进行处理，处理完毕后又可以返回处理结果告知UI线程进行处理，需要注意的是Web Workers API的兼容性很差，只有在IE11中兼容。
+
+
+## 编程优化
+
+### 避免双重求值
+
+避免使用代码字符串执行脚本语言，例如使用eval()、Function构造函数、setTimeout()和setInterval()。
+
+``` html
+<script>
+  let num1 = 5
+  let num2 = 6
+  result = eval("num1 + num2")
+  sum = new Function("arg1", "arg2", "return arg1 + arg2")
+  setTimeout("sum = num1 + num2", 100)
+</script>
+```
+
+> 双重求值是一项代价昂贵的操作，比直接包含代码执行速度慢许多。
+
+
+### 使用位操作
+
+在位操作中，数字被转换为有符号32位格式，每次运算符会直接操作该32位数以得到结果，尽管需要转换，但是比布尔操作相比要快得多。
+
+
+``` html
+<script>
+  let arr = [0,1,2,3,4,5,6]
+  for(let i=0,len=arr.length; i<len; i++) {
+    i%2 ? console.log('奇树', arr[i]) :console.log('偶数', arr[i])
+    i&1 ? console.log('奇树', arr[i]) :console.log('偶数', arr[i])
+  }
+</script>
+```
+
+
+``` html
+<script>
+  let arr = new Array(10000000).fill(1)
+  console.time('%')
+  for(let i=0,len=arr.length; i<len; i++) {
+    i%2 ? arr[i] : arr[i]
+  }
+  console.timeEnd('%')
+
+  console.time('&')
+  for(let i=0,len=arr.length; i<len; i++) {
+    i&1 ? arr[i] : arr[i]
+  }
+  console.timeEnd('&')
+
+/**
+%: 19.138916015625ms
+&: 16.6689453125ms
+*/
+</script>
+```
+
+
