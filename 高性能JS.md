@@ -806,4 +806,37 @@ setTimeout 10ms: 18.31591796875ms
 </script>
 ```
 
+#### 使用位掩码
+
+
+``` html
+<script>
+  const OPTION_A = 1
+  const OPTION_B = 2
+  const OPTION_C = 4
+  const OPTION_D = 8 
+
+  let options = OPTION_A | OPTION_B | OPTION_D
+
+  if(options & OPTION_A) {
+    console.log('A')
+  } 
+
+  if(options & OPTION_B) {
+    console.log('B')
+  }
+
+
+  let a = 0x01
+  a << 1
+  console.log(a)
+  a << 2
+  console.log(a)
+  console.log(a << 1)
+  console.log(a << 2)
+</script>
+```
+
+> 左移就是乘以2，右移就是除以2。
+
 
