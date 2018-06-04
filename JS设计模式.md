@@ -8,7 +8,7 @@
 构造函数的名字通常用作类名，构造函数是类的公有标识
 
 ``` javascript
-// Person类（构造函数的名字通常用作类名，构造函数是类的公有标识）
+// Person类
 function Person(name) {
   // 实例属性
   this.name = name
@@ -25,6 +25,7 @@ var person = new Person('ziyi2')
 类的实例对象都有一个不可枚举的属性constructor属性指向类（构造函数）
 
 ``` javascript
+// true
 console.log(person.constructor === Person)
 ```
 
@@ -108,23 +109,37 @@ function Person(name) {
   this.name = name
 }
 // Person类是一个Function类的实例 true
+// Person继承自Function
 console.log(Person instanceof Function)
-// 只要创建一个类（构造函数、Function类的实例对象、函数），就会为类创建一个prototype属性，这个属性指向类的原型对象，在默认情况下，原型对象会自动获得一个constructor（构造函数）属性，这个属性对应类本身（构造函数）
-console.log(Person.prototype.constructor === Person)
+```
 
-// Person类的原型对象的方法为所有实例对象共享
-// 原型是类的唯一标识
+只要创建一个类（构造函数、Function类的实例对象、函数），就会为类创建一个prototype属性，这个属性指向类的原型对象，在默认情况下，原型对象会自动获得一个constructor（构造函数）属性，这个属性对应类本身（构造函数）
+
+```javascript
+console.log(Person.prototype.constructor === Person)
+```
+
+Person类的原型对象的方法为所有实例对象共享
+
+``` javascript
+// 原型对象的方法
 Person.prototype.getName = function() {
   return this.name
 }
 // Person类的实例对象
 var person = new Person('ziyi2')
-// 通过isPrototypeOf()方法来确定原型对象是否对应当前实例对象 true
-console.log(Person.prototype.isPrototypeOf(person))
 var person1 = new Person('ziyi1')
 // 两个实例对象引用的是同一个原型方法 true
 console.log(person1.getName === person.getName)
 ```
+
+通过isPrototypeOf()方法来确定原型对象是否对应当前实例对象
+
+``` javascript
+// true
+console.log(Person.prototype.isPrototypeOf(person))
+```
+
 
  读取原型链的方法和属性时，会向上遍历搜索，首先搜索实例对象本身有没有同名属性和方法，有则返回，如果没有，则继续搜索实例对象对应的原型对象的方法和属性。
 
