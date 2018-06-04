@@ -101,7 +101,6 @@ console.log(person1.getName === person2.getName)
 
 ##### 原型特性
 
-类的所有实例共享一个原型对象，如果实例对象的方法可以通用，可以通过原型对象共享方法，而不需要为每一个实例对象开辟一个需要使用的实例方法。
 
 ``` javascript
 // Person类（构造函数、Function类的实例对象、函数）
@@ -119,7 +118,7 @@ console.log(Person instanceof Function)
 console.log(Person.prototype.constructor === Person)
 ```
 
-Person类的原型对象的方法为所有实例对象共享
+类的所有实例共享一个原型对象，如果实例对象的方法可以通用，可以通过原型对象共享方法，而不需要为每一个实例对象开辟一个需要使用的实例方法。
 
 ``` javascript
 // 原型对象的方法
@@ -133,9 +132,11 @@ var person1 = new Person('ziyi1')
 console.log(person1.getName === person.getName)
 ```
 
-通过isPrototypeOf()方法来确定原型对象是否对应当前实例对象
+当调用构造函数创建新实例后，该实例内部将包含一个指向构造函数原型对象的[[Prototype]] 内部属性，脚本中没有标准的方式访问[[Prototype]]，但在一些浏览器诸如Firefox、Safari、Chrome在每个对象上都支持属性__proto__，这个引用存在于实例与构造函数的原型对象之间，调用构造函数创建的实例都有[[Prototype]]属性，但是无法访问，可以通过isPrototypeOf()方法来确定原型对象是否对应当前实例对象
 
 ``` javascript
+// true
+console.log(person.__proto__ === Person.prototype)
 // true
 console.log(Person.prototype.isPrototypeOf(person))
 ```
@@ -247,6 +248,135 @@ for(let key in person1) {
 ```
 
 ##### 原型的弊端
+
+
+原型对象的基本类型数据的属性（存放的是具体的值，因此每个实例对象的该属性值的改变互不影响）的共享对于实例对象而言非常便捷有效，但是原型对象的引用类型属性不同，原型对象的引用类型的属性存放的是一个指针(C语言中的指针的意思，指针存放的是一个地址，并不是存放一个具体的值，因为类似数组等值在一个32bit的物理块中是放不下的，肯定是放在一个连续的物理块中，因此需要一个地址去读取这些连续的物理块)，指针最终指向的是一个连续的物理块，因此改变物理块的值会
+
+
+
+``` javascript
+function Person(name) {
+  this.name = name
+}
+
+Person.prototype = {
+  constructor: Person,
+  getName: function() {
+    return this.name
+  },
+  age: 28,
+  names: ['ziyi', 'ziyi1', 'ziyi2']
+}
+
+var person = new Person()
+person.names[0] = 'ziyi_modify'
+person.age = 11
+var person1 = new Person()
+// ["ziyi_modify", "ziyi1", "ziyi2"]
+console.log(person1.names)
+// 28
+console.log(person.age)
+```
+
+##### 组合构造函数和原型模式
+
+
+构造函数定义实例属性，原型对象定义共享的方法和基本数据类型的属性
+
+``` javascript
+function Person(name) {
+  this.name = name
+  this.names = ['ziyi', 'ziyi1', 'ziyi2']
+}
+
+Person.prototype = {
+  constructor: Person,
+  getName: function() {
+    return this.name
+  }
+}
+
+var person = new Person()
+person.names[0] = 'ziyi_modify'
+var person1 = new Person()
+// ['ziyi', 'ziyi1', 'ziyi2']
+console.log(person1.names)
+```
+
+#### 继承
+
+继承分为接口继承和实现继承，ECMAScript只支持实现继承，实现继承主要依靠原型链。
+
+
+##### 原型链
+
+假设有两个类（A类和B类），A类对应一个原型对象，通过A类创建的实例对象都包含一个指向A类原型对象的内部指针[[Prototype]](大部分浏览器支持实例对象的__proto__属性访问原型对象)。假如让A类的原型对象引用B类的实例对象，则A类的原型对象将包含一个指向B类的原型对象的内部指针[[Prototype]]，从而使A类的原型对象可以共享B类原型对象的方法和属性，从而又使A类的实例对象可以共享B类原型对象的方法和属性，这就是原型链。
+
+原型链实现了方法和属性的继承，此时A类是子类，继承了B类这个父类。
+
+``` javascript
+function A() {}
+function B() {
+  this.names = ['ziyi','ziyi1', 'ziyi2']
+}
+
+B.prototype.getName = function() {
+  return B.name
+}
+
+// A类的原型对象包含了B类原型对象的方法和属性
+// 同时也包含了B类实例对象的实例方法和实例属性
+A.prototype = new B()
+
+// 重写了A类的原型对象
+// A.prototype.constructor !== A
+// true
+console.log(A.prototype.constructor === B)
+
+console.log(A.prototype.constructor)
+
+let a = new A()
+
+// 继承B类实例对象的引用类型属性 
+// ["ziyi", "ziyi1", "ziyi2"]
+console.log(a.names)
+
+// 继承B类原型对象的方法
+console.log(a.getName())
+```
+
+> 读取对象的属性和方法时，会执行搜索，首先搜索实例对象本身有没有同名的属性和方法，有则返回, 如果没有找到，那么继续搜索原型对象，在原型对象中查找具有给定名字的属性和方法。
+
+实现原型链，本质上就是扩展了原型搜索机制
+
+- 搜索实例
+- 搜索实例的原型（该原型同时也是另一个类的实例对象）
+- 搜索实例的原型的原型
+- ...
+
+一直向上搜索，直到第一次搜索到属性或者方法为止，搜索不到，到原型链的末端停止。
+
+
+该继承方法有一个缺陷和原型对象的引用类型属性一样，B类实例对象的引用类型属性很容易被单个A类实例对象进行修改，因此并没有做到完全继承。
+
+该继承方法有一个缺陷，具体可以查看之前的原型的弊端，在原型中使用引用类型的属性，在所有的实例对象中的该属性都引用了同一个物理空间，一旦空间的值发生了变化，那么所有实例对象的该属性值就发生了变化。
+
+
+
+``` javascript
+// a实例对象修改B类实例对象的引用类型属性
+a.names.push('ziyi3')
+let a1 = new A()
+// a1中仍然引用的是B类实例对象的引用类型属性
+// ["ziyi", "ziyi1", "ziyi2", "ziyi3"]
+console.log(a1.names)
+```
+
+
+##### 借用构造函数（伪造对象或经典继承）
+
+为了解决子类的所有实例对象共享父类实例对象的引用类型属性问题，为了做到子类完全继承父类的实例对象的实例方法和实例属性，在子类的构造函数中调用父类的构造函数，从而使子类的this对象在父类构造函数中执行，并最终返回的是子类的this对象。
+
 
 
 
