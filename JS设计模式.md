@@ -1,37 +1,71 @@
-
 ## 类和继承
 
 ### ES5中类的继承
 
-
 #### 类（构造函数）
 
+
+构造函数的名字通常用作类名，构造函数是类的公有标识
+
 ``` javascript
-// Person类（构造函数）
+// Person类（构造函数的名字通常用作类名，构造函数是类的公有标识）
 function Person(name) {
-  // 实例对象的属性
+  // 实例属性
   this.name = name
-  // 实例对象的方法
+  // 实例方法
   this.getName = function() {
     return this.name
   }
 }
+
 // 类创建的对象叫类的实例对象
 var person = new Person('ziyi2')
-// 类的实例对象都有一个constructor属性指向类（构造函数）
+```
+
+类的实例对象都有一个不可枚举的属性constructor属性指向类（构造函数）
+
+``` javascript
 console.log(person.constructor === Person)
+```
+
+构造函数是类的公有标识，但是原型是类的唯一标识
+
+``` javascript
 // 检测实例对象所在的类 true
+// 实际上instanceof运算符并不会检测person是否由Person()构造函数初始化而来
+// 而是会检查person是否继承自Person.prototype
 console.log(person instanceof Person)
 // 继承至原型链顶端的Object类 true
 console.log(person instanceof Object)
+```
+
+所有实例的实例方法并不是同一个
+
+``` javascript
 var person1 = new Person('ziyi1')
 // 创建一个实例对象就会创建一个新的对象物理空间 false
 console.log(person1.getName === person.getName)
+```
+
+如果不用new关键字，Person是一个普通的全局作用域中的函数
+
+``` javascript
 Person('ziyi2')
 // 全局作用域中调用函数的this指向window全局对象 ziyi2
 console.log(window.name)
 // ziyi2
 console.log(window.getName())
+```
+
+注意类的属性和方法和实例的属性和方法的区别
+
+``` javascript
+// 类属性
+Person.age = 23
+// 类方法
+Person.getAge = function() {
+  return this.age
+}
 ```
 
 构造函数创建实例对象的过程和工厂模式类似
@@ -52,7 +86,7 @@ let person2 = createPerson('ziyi2')
 console.log(person1.getName === person2.getName)
 ```
 
-> 工厂模式虽然抽象了创建具体对象的过程，解决了创建多个相似对象的问题，但是没有解决对象的识别问题，即如何知道对象的类型，而类（构造函数）创建的实例对象可以识别实例对象是哪个类的实例。
+> 工厂模式虽然抽象了创建具体对象的过程，解决了创建多个相似对象的问题，但是没有解决对象的识别问题，即如何知道对象的类型，而类（构造函数）创建的实例对象可以识别实例对象对应哪个原型对象（需要注意原型对象是类的唯一标识，当且仅当两个对象继承自同一个原型对象，才属于同一个类的实例，而构造函数并不能作为类的唯一标识）。
 
 构造函数的创建过程
 
@@ -62,6 +96,9 @@ console.log(person1.getName === person2.getName)
 - 返回新对象（最终返回的就是new出来的实例对象，因此this指向实例对象）
 
 #### 原型
+
+
+##### 原型特性
 
 类的所有实例共享一个原型对象，如果实例对象的方法可以通用，可以通过原型对象共享方法，而不需要为每一个实例对象开辟一个需要使用的实例方法。
 
@@ -76,6 +113,7 @@ console.log(Person instanceof Function)
 console.log(Person.prototype.constructor === Person)
 
 // Person类的原型对象的方法为所有实例对象共享
+// 原型是类的唯一标识
 Person.prototype.getName = function() {
   return this.name
 }
@@ -86,6 +124,11 @@ console.log(Person.prototype.isPrototypeOf(person))
 var person1 = new Person('ziyi1')
 // 两个实例对象引用的是同一个原型方法 true
 console.log(person1.getName === person.getName)
+```
+
+ 读取原型链的方法和属性时，会向上遍历搜索，首先搜索实例对象本身有没有同名属性和方法，有则返回，如果没有，则继续搜索实例对象对应的原型对象的方法和属性。
+
+```javascript
 
 // Person类的原型对象的属性
 // 需要注意原型对象具有动态性
@@ -130,7 +173,6 @@ for(let key in person) {
 console.log(Object.keys(person))
 ```
 
-> 读取原型链的方法和属性时，会向上遍历搜索，首先搜索实例对象本身有没有同名属性和方法，有则返回，如果没有，则继续搜索实例对象对应的原型对象的方法和属性。
 
 创建类的时候默认会给类创建一个prototype属性，是类的原型对象的引用，也可以重写改类的原型对象
 
@@ -163,6 +205,7 @@ Person.prototype = {
 // true
 console.log(Person.prototype.constructor === Person)
 
+// 注意未重写原型对象之前的实例仍然指向未重写前的原型对象
 for(let key in person) {
   // name,getName
   console.log(key)
@@ -176,10 +219,19 @@ for(let key in person1) {
   console.log(key)
 }
 
+// 将constructor属性配置成不可枚举属性
+Object.defineProperty(Person.prototype,"constructor",{
+  enumerable:false,
+  value:Person
+})
 
-
-
+for(let key in person1) {
+  // name,getName
+  console.log(key)
+}
 ```
+
+##### 原型的弊端
 
 
 
