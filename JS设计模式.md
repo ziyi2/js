@@ -250,7 +250,7 @@ for(let key in person1) {
 ##### 原型的弊端
 
 
-原型对象的基本类型数据的属性（存放的是具体的值，因此每个实例对象的该属性值的改变互不影响）的共享对于实例对象而言非常便捷有效，但是原型对象的引用类型属性不同，原型对象的引用类型的属性存放的是一个指针(C语言中的指针的意思，指针存放的是一个地址，并不是存放一个具体的值，因为类似数组等值在一个32bit的物理块中是放不下的，肯定是放在一个连续的物理块中，因此需要一个地址去读取这些连续的物理块)，指针最终指向的是一个连续的物理块，因此改变物理块的值会
+原型对象的基本类型数据的属性（存放的是具体的值，因此每个实例对象的该属性值的改变互不影响）的共享对于实例对象而言非常便捷有效，但是原型对象的引用类型属性不同，原型对象的引用类型的属性存放的是一个指针(C语言中的指针的意思，指针存放的是一个地址，并不是存放一个具体的值，因为类似数组等值在一个32bit的物理块中是放不下的，肯定是放在一个连续的物理块中，因此需要一个地址去读取这些连续的物理块)，指针最终指向的是一个连续的物理块，因此通过原型对象的引用类型修改的值都是改变这个物理块中的值，因此所有实例对象的该指向都会发生变化。
 
 
 
@@ -275,7 +275,7 @@ var person1 = new Person()
 // ["ziyi_modify", "ziyi1", "ziyi2"]
 console.log(person1.names)
 // 28
-console.log(person.age)
+console.log(person1.age)
 ```
 
 ##### 组合构造函数和原型模式
@@ -310,39 +310,37 @@ console.log(person1.names)
 
 ##### 原型链
 
-假设有两个类（A类和B类），A类对应一个原型对象，通过A类创建的实例对象都包含一个指向A类原型对象的内部指针[[Prototype]](大部分浏览器支持实例对象的__proto__属性访问原型对象)。假如让A类的原型对象引用B类的实例对象，则A类的原型对象将包含一个指向B类的原型对象的内部指针[[Prototype]]，从而使A类的原型对象可以共享B类原型对象的方法和属性，从而又使A类的实例对象可以共享B类原型对象的方法和属性，这就是原型链。
+假设有两个类（Son类和Father类），Son类对应一个原型对象，通过Son类创建的实例对象都包含一个指向Son类原型对象的内部指针[[Prototype]](大部分浏览器支持实例对象的__proto__属性访问原型对象)。假如让Son类的原型对象引用Father类的实例对象，则Son类的原型对象将包含一个指向Father类的原型对象的内部指针[[Prototype]]，从而使Son类的原型对象可以共享Father类原型对象和实例对象（注意这里也包括实例对象）的方法和属性，从而又使Son类的实例对象可以共享Father类原型对象的方法和属性，这就是原型链。
 
-原型链实现了方法和属性的继承，此时A类是子类，继承了B类这个父类。
+原型链实现了方法和属性的继承，此时Son类是子类，继承了Father类这个父类。
 
 ``` javascript
-function A() {}
-function B() {
+function Father() {
   this.names = ['ziyi','ziyi1', 'ziyi2']
 }
+function Son() {}
 
-B.prototype.getName = function() {
-  return B.name
+Father.prototype.getName = function() {
+  return Father.name
 }
 
-// A类的原型对象包含了B类原型对象的方法和属性
-// 同时也包含了B类实例对象的实例方法和实例属性
-A.prototype = new B()
+// Son类的原型对象包含了Father类原型对象的方法和属性
+// 同时也包含了Father类实例对象的实例方法和实例属性
+Son.prototype = new Father()
 
-// 重写了A类的原型对象
-// A.prototype.constructor !== A
+// 重写了Son类的原型对象
+// Son.prototype.constructor !== Son
 // true
-console.log(A.prototype.constructor === B)
+console.log(Son.prototype.constructor === Father)
 
-console.log(A.prototype.constructor)
+let son = new Son()
 
-let a = new A()
-
-// 继承B类实例对象的引用类型属性 
+// 继承Father类实例对象的引用类型属性 
 // ["ziyi", "ziyi1", "ziyi2"]
-console.log(a.names)
+console.log(son.names)
 
-// 继承B类原型对象的方法
-console.log(a.getName())
+// 继承Father类原型对象的方法
+console.log(son.getName())
 ```
 
 > 读取对象的属性和方法时，会执行搜索，首先搜索实例对象本身有没有同名的属性和方法，有则返回, 如果没有找到，那么继续搜索原型对象，在原型对象中查找具有给定名字的属性和方法。
@@ -350,36 +348,72 @@ console.log(a.getName())
 实现原型链，本质上就是扩展了原型搜索机制
 
 - 搜索实例
-- 搜索实例的原型（该原型同时也是另一个类的实例对象）
+- 搜索实例的原型（该原型同时也是另一个类的实例）
 - 搜索实例的原型的原型
 - ...
 
 一直向上搜索，直到第一次搜索到属性或者方法为止，搜索不到，到原型链的末端停止。
 
 
-该继承方法有一个缺陷和原型对象的引用类型属性一样，B类实例对象的引用类型属性很容易被单个A类实例对象进行修改，因此并没有做到完全继承。
-
-该继承方法有一个缺陷，具体可以查看之前的原型的弊端，在原型中使用引用类型的属性，在所有的实例对象中的该属性都引用了同一个物理空间，一旦空间的值发生了变化，那么所有实例对象的该属性值就发生了变化。
-
-
+该继承方法有一个缺陷，具体可以查看原型的弊端，在原型中使用引用类型的属性，在所有的实例对象中的该属性都引用了同一个物理空间，一旦空间的值发生了变化，那么所有实例对象的该属性值就发生了变化。
 
 ``` javascript
-// a实例对象修改B类实例对象的引用类型属性
-a.names.push('ziyi3')
-let a1 = new A()
-// a1中仍然引用的是B类实例对象的引用类型属性
+// son实例对象修改Father类实例对象（Son类的原型对象）的引用类型属性
+son.names.push('ziyi3')
+let son1 = new Son()
+// son1中仍然引用的是Father类实例对象（Son类的原型对象）的引用类型属性
 // ["ziyi", "ziyi1", "ziyi2", "ziyi3"]
-console.log(a1.names)
+console.log(son1.names)
 ```
 
 
 ##### 借用构造函数（伪造对象或经典继承）
 
-为了解决子类的所有实例对象共享父类实例对象的引用类型属性问题，为了做到子类完全继承父类的实例对象的实例方法和实例属性，在子类的构造函数中调用父类的构造函数，从而使子类的this对象在父类构造函数中执行，并最终返回的是子类的this对象。
+为了避开原型中有引用类型数据的问题，做到子类继承（这里的继承只是创建和父类相同的实例对象的属性和方法）父类的实例对象的实例方法和实例属性，在子类的构造函数中调用父类的构造函数，从而使子类的this对象在父类构造函数中执行，并最终返回的是子类的this对象（我们知道子类的this对象在构造函数的执行过程中都是开辟新的对象空间，因此引用类型的实例属性都是不同的指针地址）。
 
 
+``` javascript
+function Father() {
+  this.names = ['ziyi','ziyi1', 'ziyi2']
+}
+function Son() {
+  // 使用new关键字执行的构造函数this指向实例对象
+  // 注意如果不用new关键字执行this指向全局对象window
+  // 这里的Father类当做一个普通的执行函数
+  // 此时只是让Son类的实例对象创建了和Father类实例对象一样的实例属性和实例方法
+  Father.call(this)
+
+  // Father.call(this)类似于在Son构造函数中执行
+  // this.names = ['ziyi','ziyi1', 'ziyi2']
+}
+
+let son = new Son()
+son.names.push('ziyi3')
+// ["ziyi", "ziyi1", "ziyi2", "ziyi3"]
+console.log(son.names)
+
+let son1 = new Son()
+// ['ziyi','ziyi1', 'ziyi2']
+console.log(son1.names)
+```
+
+如果此时父类有自己的实例属性，而子类也有自己的实例属性
 
 
+``` javascript
+function Father(name,age) {
+  this.name = name
+  this.age = age
+}
+function Son() {
+  Father.apply(this, arguments)
+  this.job = arguments[2]
+}
+
+let son = new Son('ziyi2', 28, 'web')
+// {name: "ziyi2", age: 28, job: "web"}
+console.log(son)
+```
 
 
 
