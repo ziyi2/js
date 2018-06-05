@@ -1,9 +1,11 @@
+
+# JS设计模式
+
 ## 类、原型和继承
 
 ### ES5中类的继承
 
 #### 类（构造函数）
-
 
 构造函数的名字通常用作类名，构造函数是类的公有标识
 
@@ -98,9 +100,7 @@ console.log(person1.getName === person2.getName)
 
 #### 原型
 
-
 ##### 原型特性
-
 
 ``` javascript
 // Person类（构造函数、Function类的实例对象、函数）
@@ -140,7 +140,6 @@ console.log(person.__proto__ === Person.prototype)
 // true
 console.log(Person.prototype.isPrototypeOf(person))
 ```
-
 
  读取原型链的方法和属性时，会向上遍历搜索，首先搜索实例对象本身有没有同名属性和方法，有则返回，如果没有，则继续搜索实例对象对应的原型对象的方法和属性。
 
@@ -188,7 +187,6 @@ for(let key in person) {
 // ['name']
 console.log(Object.keys(person))
 ```
-
 
 创建类的时候默认会给类创建一个prototype属性，是类的原型对象的引用，也可以重写改类的原型对象
 
@@ -280,7 +278,6 @@ console.log(person1.age)
 
 ##### 组合构造函数和原型模式
 
-
 构造函数定义实例属性，原型对象定义共享的方法和基本数据类型的属性
 
 ``` javascript
@@ -306,7 +303,6 @@ console.log(person1.names)
 #### 继承
 
 继承分为接口继承和实现继承，ECMAScript只支持实现继承，实现继承主要依靠原型链。
-
 
 ##### 原型链
 
@@ -366,11 +362,9 @@ let son1 = new Son()
 console.log(son1.names)
 ```
 
-
 ##### 借用构造函数（伪造对象或经典继承）
 
 为了避开原型中有引用类型数据的问题，做到子类继承（这里的继承只是创建和父类相同的实例对象的属性和方法）父类的实例对象的实例方法和实例属性，在子类的构造函数中调用父类的构造函数，从而使子类的this对象在父类构造函数中执行，并最终返回的是子类的this对象（我们知道子类的this对象在构造函数的执行过程中都是开辟新的对象空间，因此引用类型的实例属性都是不同的指针地址）。
-
 
 ``` javascript
 function Father() {
@@ -398,7 +392,6 @@ console.log(son1.names)
 ```
 
 如果此时父类有自己的实例属性，而子类也有自己的实例属性
-
 
 ``` javascript
 function Father(name,age) {
@@ -464,6 +457,105 @@ console.log(Son.prototype.name)
 console.log(Son.prototype.names)
 ```
 
+##### 寄生组合式继承
+
+| 类型      |     优缺点 |
+| :-------- | :--------|
+| 构造函数模式    |  可以创建不同实例属性的副本，包括引用类型的实例属性，但是不能共享方法  |
+| 原型模式    |  引用类型的属性对于实例对象而言共享同一个物理空间，因此可以共享方法  |  
+| 原型链    |  对父类实现方法和属性继承的过程中，父类实例对象的引用类型属性在子类的实例中共享同一个物理空间，因为父类的实例对象指向了子类的原型对象  |
+| 借用构造函数    |  解决了继承中的引用值类型共享物理空间的问题，但是没法实现方法的共享   |
+| 组合继承    |  属性的继承使用借用构造函数方法，方法的继承使用原型链技术，即解决了引用值类型共享的问题，又实现了方法的共享，但是子类的原型对象中还存在父类实例对象的实例属性   |
+
+目前而言，组合继承已经可以解决大部分问题，但是也有缺陷，就是会调用两次父类的构造函数，一次是实现原型时使子类的原型等于父类的实例对象调用了父类构造函数（同时在子类的原型对象中还存在了父类实例对象的实例属性），一次是使用子类构造函数时调用了一次父类构造函数。
+
+寄生组合式继承可以解决在继承的过程中子类的原型对象中还存在父类实例对象的实例属性的问题。
+
+``` javascript
+// 继承o原型对象的方法和属性
+// 需要注意o的引用类型属性在F实例对象中共享同一个物理空间（需要避免使用引用类型属性值）
+// 当然o的方法在F实例对象中共享
+function objectCreate(o) {
+  // F类没有实例方法和实例属性
+  function F() {}
+  F.prototype = o
+  // o是F类的原型对象
+  // 返回F类的实例对象
+  // new F().__proto__ = o
+  // F类实例对象共享o的属性和方法
+  // true
+  console.log(new F().__proto__ === o)
+  return new F()
+}
+
+
+// SubClass实现对于SuperClass原型对象的方法和属性的继承
+function inheritPrototype(SubClass, SuperClass) {
+  // prototype是一个实例对象
+  // prototype不是SuperClass的实例对象而是另一个类F类的实例对象
+  // SuperClass类和objectCreate函数中的F类的原型对象都是SuperClass.prototype
+  // 这里没有调用SuperClass构造函数
+  // prototype继承了SuperClass类的原型对象的方法和属性
+  var prototype = objectCreate(SuperClass.prototype)
+  // 使prototype实例对象的constructor属性指向SubClass子类
+  // 因为重写SuperClass的原型对象时会修改constructor属性
+  // SubClass.prototype.constructor = SubClass
+  prototype.constructor = SubClass
+  // 使SubClass类的原型对象指向prototype实例对象
+  // 类似于SubClass.prototype = new SuperClass()
+  // 只是这里是SubClass.prototype = new F()
+  // F类本身没有实例方法和实例属性
+  SubClass.prototype = prototype
+}
+
+
+
+function Father(name, age) {
+  this.name = name
+  this.age = age
+}
+
+Father.prototype.getName = function() {
+  return this.name
+}
+
+function Son1(name, age, job) {
+  // 借用构造函数
+  Father.apply(this, arguments)
+  this.job = job
+}
+
+function Son2(name, age, job) {
+  // 借用构造函数
+  Father.apply(this, arguments)
+  this.job = job
+}
+
+
+
+// 组合继承的写法
+Son1.prototype = new Father()
+Son1.prototype.constructor = Son1
+// age : undefined
+// constructor : ƒ Son1(name, age, job)
+// name : undefined
+// __proto__ : { getName:ƒ () constructor : ƒ Father(name, age) }
+console.log(Son1.prototype)
+
+// 寄生组合式继承的写法
+// 借用构造函数实现构造函数的方法和属性的继承
+// inheritPrototype函数实现原型对象的方法和属性的继承
+inheritPrototype(Son2, Father)
+// constructor : ƒ Son2(name, age, job)
+// __proto__ : { getName:ƒ () constructor : ƒ Father(name, age) }
+console.log(Son2.prototype)
+
+
+var son1 = new Son1('ziyi2', 28, 'web')
+var son2 = new Son2('ziyi3', 28, 'hardware')
+son1.getName()
+son2.getName()
+```
 
 ### ES6中类的继承
 
@@ -489,6 +581,3 @@ let son = new Son('value', 'key')
 // value
 console.log(son.value)
 ```
-
-
-
