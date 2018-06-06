@@ -442,7 +442,7 @@ son.names.push('ziyi2')
 // { age:28 job:"web" name:"ziyi2" names:["ziyi2"] }
 console.log(son)
 let son1 = new Son('ziyi2', 28, 'web')
-// [] son.name和son1.names是不同的指针，指向不同的物理空间
+// [] son.names和son1.names是不同的指针，指向不同的物理空间
 console.log(son1.names)
 ```
 
