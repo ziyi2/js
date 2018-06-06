@@ -665,3 +665,38 @@ class Es6Person {
 let es6Person = new Es6Person('ziyi2', 28)
 es6Person[getAge]()
 ```
+
+#### 类的私有方法和私有属性
+
+在ES6的类中目前并没有私有方法和私有属性的标准语法，但是可以通过其他方式模拟实现，例如属性名采用表达式
+
+``` javascript
+// 利用Symbol值的唯一性
+const getAge = Symbol('getAge')
+const job = Symbol('job')
+
+class Es6Person {
+  constructor(name, age) {
+    this.name = name
+    this.age = age
+    this.getName = () => {
+      return this.name
+    }
+    // 私有属性
+    this[job] = 'web'
+  }
+  
+  // 私有方法
+  [getAge]() {
+    return this.age
+  }
+}
+
+let es6Person = new Es6Person('ziyi2', 28)
+es6Person[getAge]()
+es6Person[job]
+```
+
+> 此时如果Es6Person类处在一个文件中，那么getAge和job变量是当前文件的局部变量，外部文件无法访问，从而在外部文件调用Es6Person类的时候无法访问具有唯一性的getAge和job变量，从而使之成为私有方法和私有属性。目前私有属性有一个3阶段的[提案](https://github.com/tc39/proposal-private-methods)。
+
+
