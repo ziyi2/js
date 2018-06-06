@@ -188,7 +188,7 @@ for(let key in person) {
 console.log(Object.keys(person))
 ```
 
-创建类的时候默认会给类创建一个prototype属性，是类的原型对象的引用，也可以重写改类的原型对象
+创建类的时候默认会给类创建一个prototype属性，是类的原型对象的引用，也可以重写该类的原型对象
 
 ``` javascript
 function Person(name) {
