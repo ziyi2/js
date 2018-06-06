@@ -557,25 +557,110 @@ son2.getName()
 
 ### ES6中类的继承
 
-在ES6中,首先创建父类的实例对象this,在子类的构造函数中使用super方法修改父类的this,从而得到与父类同样的实例属性和方法。如果要实现继承，必须在子类的构造函数中调用super方法，否则子类得不到this对象。
+#### 类
+
+ES6中的类只是ES5封装后的语法糖而已
 
 ``` javascript
-class Father {
-  constructor(value) {
-    this.value = value
+// ES6中实现的Person类
+class Es6Person {
+  constructor(name, age) {
+    // 实例对象的属性
+    this.name = name
+    this.age = age
+    // 实例对象的方法
+    this.getName = () => {
+      return this.name
+    }
+  }
+
+  // Person类原型对象的方法
+  getAge() {
+    return this.age
   }
 }
 
-class Son extends Father {
-  constructor(value, key) {
-    // super子类的构造函数里表示父类的构造函数
-    // 调用父类的constructor(value)
-    super(value)
-    this.key = key
+
+// ES5中实现的Person类
+function Es5Person (name, age) {
+  // 实例对象的属性
+  this.name = name
+  this.age = age
+  // 实例对象的方法
+  this.getName = () => {
+    return this.name
   }
 }
 
-let son = new Son('value', 'key')
-// value
-console.log(son.value)
+// Person类原型对象的方法
+Es5Person.prototype.getAge = function() {
+  return this.age
+}
+```
+
+在ES5中类的原型对象的方法是可枚举的，但是ES6中不可枚举
+
+``` javascript
+// []
+console.log(Object.keys(Es6Person.prototype))
+// ["getAge"]
+console.log(Object.keys(Es5Person.prototype))
+```
+
+
+在ES5中如果不用new，this指向windows全局变量，在ES6如果不用new关键字则会报错处理
+
+``` javascript
+// Uncaught TypeError: Class constructor Person cannot be invoked without 'new'
+let person2 = Person('ziyi2', 111)
+```
+
+在ES6中类的属性名可以采用表达式
+
+``` javascript
+const getAge = Symbol('getAge')
+
+class Es6Person {
+  constructor(name, age) {
+    this.name = name
+    this.age = age
+    this.getName = () => {
+      return this.name
+    }
+  }
+  
+  // 表达式
+  [getAge]() {
+    return this.age
+  }
+}
+
+let es6Person = new Es6Person('ziyi2', 28)
+es6Person[getAge]()
+```
+
+
+ES6中的类是不会声明提升的, ES5可以
+
+``` javascript
+// Es5Person {}
+console.log(Es5Person)
+// Uncaught ReferenceError: Es6Person is not defined
+let es6 = new Es6Person()
+console.log(es6)
+
+class Es6Person {}
+function Es5Person {}
+```
+
+
+在ES6中如果不写构造方法
+
+``` javascript
+class Es6Person {}
+
+// 等同于
+class Es6Person {
+  constructor() {}
+}
 ```
