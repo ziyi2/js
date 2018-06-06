@@ -612,31 +612,7 @@ console.log(Object.keys(Es5Person.prototype))
 
 ``` javascript
 // Uncaught TypeError: Class constructor Person cannot be invoked without 'new'
-let person2 = Person('ziyi2', 111)
-```
-
-在ES6中类的属性名可以采用表达式
-
-``` javascript
-const getAge = Symbol('getAge')
-
-class Es6Person {
-  constructor(name, age) {
-    this.name = name
-    this.age = age
-    this.getName = () => {
-      return this.name
-    }
-  }
-  
-  // 表达式
-  [getAge]() {
-    return this.age
-  }
-}
-
-let es6Person = new Es6Person('ziyi2', 28)
-es6Person[getAge]()
+let person2 = Es6Person('ziyi2', 111)
 ```
 
 
@@ -663,4 +639,29 @@ class Es6Person {}
 class Es6Person {
   constructor() {}
 }
+```
+
+
+在ES6中类的属性名可以采用表达式
+
+``` javascript
+const getAge = Symbol('getAge')
+
+class Es6Person {
+  constructor(name, age) {
+    this.name = name
+    this.age = age
+    this.getName = () => {
+      return this.name
+    }
+  }
+  
+  // 表达式
+  [getAge]() {
+    return this.age
+  }
+}
+
+let es6Person = new Es6Person('ziyi2', 28)
+es6Person[getAge]()
 ```
