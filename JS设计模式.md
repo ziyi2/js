@@ -668,7 +668,7 @@ es6Person[getAge]()
 
 #### 类的私有方法和私有属性
 
-在ES6的类中目前并没有私有方法和私有属性的标准语法，但是可以通过其他方式模拟实现，例如属性名采用表达式
+在ES6的类中目前并没有私有方法和私有属性的标准语法，但是可以通过其他方式模拟实现，例如属性名采用表达式，而ES5中很难实现
 
 ``` javascript
 // 利用Symbol值的唯一性
@@ -700,3 +700,109 @@ es6Person[job]
 > 此时如果Es6Person类处在一个文件中，那么getAge和job变量是当前文件的局部变量，外部文件无法访问，从而在外部文件调用Es6Person类的时候无法访问具有唯一性的getAge和job变量，从而使之成为私有方法和私有属性。目前私有属性有一个3阶段的[提案](https://github.com/tc39/proposal-private-methods)。
 
 
+#### 类的getter和setter
+
+ES6利用get和set关键字对某属性设置存值函数和取值函数拦截属性的存取行为和ES5一样。
+
+``` javascript
+class Es6Person {
+  constructor(name,age) {
+    this.name = name
+    this.age = age
+  }
+
+  get name() {
+    return 'ziyi2'
+  }
+
+  set name(value) {
+    console.log('setter: ', value)
+  }
+}
+
+// setter: ziyi3
+let person = new Es6Person('ziyi3', 11)
+// ziyi2
+console.log(person.name)
+// setter: ziyi2
+person.name = 'ziyi2'
+```
+
+#### 类的Generator方法
+
+给类增加一个遍历器，从而使类可以进行for...of操作
+
+``` javascript
+class Es6Person {
+  constructor(...args) {
+    this.args = args
+  }
+
+  * [Symbol.iterator]() {
+    for(let arg of this.args) {
+      yield arg
+    }
+  }
+}
+
+let person = new Es6Person('ziyi3', 11)
+
+for(let value of person) {
+  // ziyi3
+  // 11
+  console.log(value)
+}
+```
+
+#### 类的静态方法
+
+``` javascript
+class Es6Person {
+  // 类的静态方法
+  static getClassName() {
+    // this指向类，而不是实例对象
+    return 'Es6Person'
+  }
+
+  // 类的静态方法
+  static getName() {
+    // this指向类，而不是实例对象
+    return this.getClassName()
+  }
+}
+
+// Es6Person
+console.log(Es6Person.getName())
+```
+
+
+#### 类的静态属性提案
+
+ ES6明确规定，Class内部只有静态方法，没有静态属性，目前有一个静态属性的提案，对静态属性规定了新的写法
+
+ ``` javascript
+class Es6Person {
+  static className = 'Es6Person'
+}
+ ```
+
+#### new.target
+
+new.target返回new命令作用于的那个构造函数
+
+
+``` javascript
+class Es6Person {
+  constructor(name) {
+    // new.target = class Es6Person {}
+    if(new.target === Es6Person) {
+      this.name = name
+    } else {
+      throw new Error('没有用new命令生成实例对象')
+    }
+  }
+}
+let person = new Es6Person('ziyi2')
+```
+
+> new.target可以用于类的继承。
