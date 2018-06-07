@@ -806,3 +806,35 @@ let person = new Es6Person('ziyi2')
 ```
 
 > new.target可以用于类的继承。
+
+#### 类的继承
+
+ES5 的继承，实质是先创造子类的实例对象this，然后再将父类的方法添加到this上面（Parent.apply(this)）。ES6 的继承机制完全不同，实质是先创造父类的实例对象this（所以必须先调用super方法），然后再用子类的构造函数修改this。
+
+
+子类必须在constructor方法中调用super方法，否则新建实例时会报错。这是因为子类自己的this对象，必须先通过父类的构造函数完成塑造，得到与父类同样的实例属性和方法，然后再对其进行加工，加上子类自己的实例属性和方法。如果不调用super方法，子类就得不到this对象
+
+``` javascript
+class Es6Person {
+  constructor(name) {
+    this.name = name
+  }
+}
+
+
+class Es6WebDeveloper extends Es6Person {
+  constructor(name, age) {
+    // 表示父类构造函数
+    // 子类实例的构建，是基于对父类实例加工，只有super方法才能返回父类实例
+    super(name)
+    this.age = age
+  }
+}
+```
+
+此时的继承类似于ES5的寄生组合式继承，子类的原型对象中没有福父类的实例对象和实例方法
+
+``` javascript
+// Es6Person {constructor: ƒ}
+console.log(Es6WebDeveloper.prototype)
+```
