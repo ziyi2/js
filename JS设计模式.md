@@ -809,7 +809,7 @@ let person = new Es6Person('ziyi2')
 
 #### 类的继承
 
-ES5 的继承，实质是先创造子类的实例对象this，然后再将父类的方法添加到this上面（Parent.apply(this)）。ES6 的继承机制完全不同，实质是先创造父类的实例对象this（所以必须先调用super方法），然后再用子类的构造函数修改this。
+ES5 的继承使用借助构造函数实现，实质是先创造子类的实例对象this，然后再将父类的方法添加到this上面。ES6 的继承机制完全不同，实质是先创造父类的实例对象this（所以必须先调用super方法），然后再用子类的构造函数修改this。
 
 
 子类必须在constructor方法中调用super方法，否则新建实例时会报错。这是因为子类自己的this对象，必须先通过父类的构造函数完成塑造，得到与父类同样的实例属性和方法，然后再对其进行加工，加上子类自己的实例属性和方法。如果不调用super方法，子类就得不到this对象
@@ -832,9 +832,216 @@ class Es6WebDeveloper extends Es6Person {
 }
 ```
 
-此时的继承类似于ES5的寄生组合式继承，子类的原型对象中没有福父类的实例对象和实例方法
+例如以下写法会报错
+
+``` javascript
+class Es6Person {
+  constructor(name) {
+    this.name = name
+  }
+}
+
+
+class Es6WebDeveloper extends Es6Person {
+  constructor(name, age) {
+    // Uncaught ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor
+    console.log(this)
+    super(name)
+  }
+}
+
+let developer = new Es6WebDeveloper('ziyi2', 11)
+
+```
+
+此时的继承类似于ES5的寄生组合式继承，子类的原型对象中没有父类的实例对象和实例方法
 
 ``` javascript
 // Es6Person {constructor: ƒ}
 console.log(Es6WebDeveloper.prototype)
+```
+
+ES6在继承的语法上显然也考虑的更加周到，不仅继承了类的原型对象，还继承了类的静态属性和静态方法
+
+``` javascript
+class Es6Person {
+
+  static getClassName() {
+    return Es6Person.name
+  }
+
+  constructor(name) {
+    this.name = name
+  }
+}
+
+
+class Es6WebDeveloper extends Es6Person {
+  constructor(name, age) {
+    super(name)
+    this.age = age
+  }
+}
+
+// Es6Person
+Es6WebDeveloper.getClassName()
+```
+
+
+#### super关键字
+
+super作为函数调用时，代表父类的构造函数，只能在子类的构造函数中使用
+
+``` javascript
+class Es6Person {
+  constructor(name) {
+    // Es6WebDeveloper
+    console.log(new.target.name)
+    // Es6WebDeveloper {}
+    console.log(this)
+    this.name = name
+  }
+}
+
+class Es6WebDeveloper extends Es6Person {
+  constructor(name, age) {
+    // 类似于A.prototype.constructor.call(this) 
+    // super内部的this指向Es6WebDeveloper
+    super(name)
+    this.age = age
+  }
+}
+
+let developer = new Es6WebDeveloper('ziyi2')
+```
+
+除此之外，super当做一个对象使用，在子类普通方法（原型对象）中，指向父类的原型对象，因此可以调用父类的原型方法，需要注意的是执行父类的原型方法时，在方法中执行时this指向的是子类的实例对象而不是父类的实例对象
+
+``` javascript
+class Es6Person {
+  constructor(name) {
+    this.name = name
+  }
+  getName() {
+    // Es6WebDeveloper {name: "ziyi2", age: undefined}
+    // 子类的whoIsSuper中调用的super.getName在这里执行的this指向子类实例对象
+    console.log(this)
+    return this.name
+  }
+}
+
+Es6Person.prototype.className = Es6Person.name
+
+class Es6WebDeveloper extends Es6Person {
+  constructor(name, age) {
+    super(name)
+    this.age = age
+  }
+  whoIsSuper() {
+    // true
+    console.log(super.getName === Es6Person.prototype.getName)
+
+    // super无法获取父类的实例属性
+    // 因为super指向的是父类的原型对象
+
+    // undefined
+    console.log(super.name)
+    // Es6Person
+    console.log(super.className)
+
+    return super.getName()
+  }
+}
+
+let developer = new Es6WebDeveloper('ziyi2')
+// ziyi2
+console.log(developer.whoIsSuper())
+```
+
+如果super用作对象且不在子类的原型对象中调用，而是在子类的静态方法中调用，那么super指代父类而不是父类的原型对象，同理调用父类静态方法时this指向子类而不是父类
+
+``` javascript
+class Es6Person {
+  static getClassName() {
+    // class Es6WebDeveloper extends Es6Person {
+    // ...
+    // 在子类中使用super调用时，this指向子类
+    console.log(this)
+    return this.name
+  }
+
+  constructor(name) {
+    this.name = name
+  }
+}
+
+class Es6WebDeveloper extends Es6Person {
+  constructor(name, age) {
+    super(name)
+    this.age = age
+  }
+
+  static getClassName() {
+    return super.getClassName()
+  }
+}
+
+// Es6WebDeveloper
+console.log(Es6WebDeveloper.getClassName())
+```
+
+#### ES6的继承原理
+
+__proto__存在于实例与构造函数的原型对象之间
+
+``` javascript
+class Es6Person {
+  constructor(name) {
+    this.name = name
+  }
+}
+
+let es6Person = new Es6Person('ziyi2')
+// true
+console.log(es6Person.__proto__ === Es6Person.prototype)
+```
+
+
+ES6的继承原理
+
+``` javascript
+class Es6Person {}
+class Es6WebDeveloper extends Es6Person {}
+
+// true
+// Es6WebDeveloper看做一个实例对象
+// Es6Person看做一个原型对象
+// 因此Es6WebDeveloper继承了Es6Person的所有属性和方法
+// 实现了类的静态属性和方法的继承
+// 子类的原型是父类
+console.log(Es6WebDeveloper.__proto__ === Es6Person)
+
+// true
+// 这里类似于 Es6WebDeveloper.prototype = new Es6Person()
+// 和ES5的原型链一样
+// 子类的原型对象是父类的原型对象的实例
+// 子类的实例继承父类的实例
+console.log(Es6WebDeveloper.prototype.__proto__ === Es6Person.prototype)
+```
+
+因此以下继承都是可理解的
+
+``` javascript
+class A extends Object {
+}
+
+A.__proto__ === Object // true
+A.prototype.__proto__ === Object.prototype // true
+
+
+class A {
+}
+
+A.__proto__ === Function.prototype // true
+A.prototype.__proto__ === Object.prototype // true
 ```
