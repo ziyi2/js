@@ -805,7 +805,7 @@ class Es6Person {
 let person = new Es6Person('ziyi2')
 ```
 
-> new.target可以用于类的继承。
+> > new.target可以用于指定哪些子类可以继承父类。
 
 #### 类的继承
 
