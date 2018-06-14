@@ -209,6 +209,115 @@ console.log(mother.getType())
 > 关于寄生组合式继承请查看[js类和继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)。抽象工厂模式中的抽象类创建的不是一个真实的对象实例，而是一个类簇，抽象类指定了类的结构，区别于简单工厂模式创建单一对象，工厂方法模式创建多类对象。不过这种模式应用的并不广泛，因为JavaScript中不支持抽象化创建于虚拟方法。
 
 
+## 建造者模式
 
+工厂模式可有效的创建可复用的实例对象，关心的是最终创建的对象是什么，不关心创建的过程，因此通过工厂模式得到的都是对象实例或者类簇。建造者模式相对比工厂模式复杂一些，关心的是创建对象的过程，例如之前的工厂模式我们关心的创建一个Person类，创建它的共同基本信息，例如name和age以及job等，但是建造者模式不仅要关注Person类的创建过程，还要关注这个Person更多细节，比如穿什么衣服，兴趣爱好是什么，在创建Person类实例对象的基础上，还可以自由组合其他更多信息。
+
+比如要创建一个人的简历模板，让其可以自由选择展示的信息
+
+
+``` javascript
+
+// Person类
+function Person(name, age) {
+  this.name = name
+  this.age = age
+}
+
+Person.prototype.getName = function() {
+  return this.name
+}
+
+Person.prototype.getAge = function() {
+  return this.age
+}
+
+// Job类
+function Job(job) {
+  switch(job) {
+    case 'teacher':
+      this.job = '教师'
+      this.jobDesc = '数学教师'
+      break
+    
+    case 'doctor':
+      this.job = '医生'
+      this.jobDesc = '骨科医生'
+      break
+    
+    case 'coder':
+      this.job = '程序员'
+      this.jobDesc = 'Web前端程序员'
+      break
+
+    default:
+      this.job = job
+      this.jobDesc = '不清楚您的职位的相关描述'
+      break
+  }
+}
+
+
+Job.prototype.changeJobDesc = function(desc) {
+  this.jobDesc = desc
+} 
+
+Job.prototype.changeJob = function(job) {
+  return this.job = job
+}
+
+// Hobby类
+function Hobby(hobby) {
+  this.hobby = []
+  this.hobby.push(hobby)
+}
+
+Hobby.prototype.addHobby = function(hobby) {
+  this.hobby.concat(hobby)
+}
+
+Hobby.prototype.getHobby = function() {
+  return this.hobby.split(',')
+}
+
+// Skill类
+function Skill(skill) {
+  this.skill = []
+  this.skill.push(skill)
+}
+
+// ...
+
+// 简历类
+function Resume(name, age) {
+  this.person = new Person(name, age)
+  this.person.job = new Job()
+  this.person.hobby = new Hobby()
+  this.person.skill = new Skill()
+}
+
+// 创建简历
+let resume = new Resume('ziyi2', 28)
+console.log(resume)
+
+/*
+person : Person {
+  age : 28
+  hobby: Hobby {
+    hobby: Array(1)
+  }
+  job: Job {
+    job: undefined, 
+    jobDesc: "不清楚您的职位的相关描述
+  }
+  name:"ziyi2"
+  skill: Skill {
+    skill: Array(1)
+  }
+}  
+*/
+
+```
+> 创建的对象更复杂，是一个复合对象。
 
 
