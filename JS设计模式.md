@@ -366,6 +366,135 @@ console.log(person.getName())
 ```
 
 
+## 单例模式（单体模式）
+
+单例模式是只允许实例化一次的对象类，单例模式更多的用于命名空间。
+
+``` javascript
+// Family命名空间
+var Family = {
+  data: {
+    names: [],
+    ages: []
+  },
+
+  get: {
+    getNames: function() {
+      return this.names
+    },
+
+    getAges: function() {
+      return this.ages
+    }
+  },
+
+  set: {
+    setNames: function(names) {
+      this.names = names
+    },
+
+    setAges: function(ages) {
+      this.ages = ages
+    }
+  }
+}
+```
+
+例如模块分明的设计
+
+``` javascript
+var Ziyi2 = {
+  event: {},
+  dom: {},
+  style: {},
+  data: {}
+}
+```
+
+也可以创建静态变量，实现static关键字功能
+
+``` javascript
+
+var Family = (function() {
+  // 私有变量
+  var _names = []
+
+  // 闭包，对外抛出改变私有变量和获取私有变量的方法
+  return {
+    getNames: function() {
+      return _names
+    },
+    setNames: function(names) {
+      _names = names
+    }
+  }
+// 立即执行的匿名函数创建了局部作用域  
+})()
+
+Family.setNames(['1','2','3'])
+console.log(Family.getNames())
+```
+>该单例模式在创建Family对象的时候立即执行了匿名函数，因此可以立即得到getNames和setNames方法，因此可以说是立即创建了单例对象。
+
+
+有的时候单例对象需要被延迟创建（"惰性创建"）
+
+``` javascript
+
+
+var Family = (function() {
+
+  // 单例引用, 私有属性
+  var _instance = null
+
+  // 单例对象
+  function Single() {
+
+    // 私有变量
+    var _names = []
+
+    // 对外抛出的公有方法, 闭包
+    return {
+      getNames: function() {
+        return _names
+      },
+      setNames: function(names) {
+        _names = names
+      }
+    }
+  }
+
+  // 获取单例对象接口，闭包
+  return function() {
+    if(!_instance) {
+      _instance = Single()
+    }
+    return _instance
+  }
+})()
+
+
+// 此时Family是一个function,并没有创建单例对象
+console.log(Family)
+
+// 此时创建了单例对象
+console.log(Family())
+
+Family().setNames(['1','2','3'])
+console.log(Family().getNames())
+```
+
+> 如果只需要被实例化一次，可以使用单例模式而不是其他创建型设计模式（工厂模式、建造者模式、原型模式），从而节省系统资源。
+
+
+## 创建型设计模式小结
+
+创建型设计模式主要用于创建对象，从而简化创建相似对象的复杂程度，创建型设计模式包括工厂模式、建造者模式、原型模式和单例模式，一般情况下经常被复用，应该选择建造者模式或原型模式，而类似工具方法或库类的创建，则应该选择单例模式。
+
+
+
+
+
 
 
 
