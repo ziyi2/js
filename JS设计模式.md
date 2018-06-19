@@ -493,7 +493,104 @@ console.log(Family().getNames())
 
 
 
+## 外观模式
 
+为复杂的子系统借口提供更高级统一接口，通过这个接口使得对子系统接口的访问更容易，在JavaScript中有时也会用于对底层结构兼容性做统一封装来简化用户使用。
+
+``` javascript
+var Browser = {
+  event: {
+    add: function(dom, type, fn) {
+      if(dom.addEventListener) {
+        dom.addEventListener(type, fn, false)
+      } else if(dom.attachEvent) {
+        dom.attachEvent('on'+type, fn)
+      } else {
+        dom['on'+ type] = fn
+      }
+    },
+
+    remove: function() {
+      // ...
+    },
+
+    self: function(event) {
+      return event || window.event
+    },
+
+    target: function(event) {
+      return event.target || event.srcElement
+    },
+
+    preventDefault: function(event) {
+      let event = this.event.self(event)
+      event.preventDefault 
+      ? event.preventDefault() 
+      : event.returnValue = false
+    }
+  },
+
+  id: function(dom, id) {
+    return dom.getElementById(id)
+  },
+
+  html: function(dom, id, html) {
+    this.id(dom, id).innerHTML = html
+  }
+}
+```
+
+> 通过外观模式对接口的二次封装隐藏其复杂性，可以简化用户的使用。
+
+
+## 适配器模式
+
+将一个类（对象）的接口（方法或属性）转化成另外一个接口，从而满足用户的需求。
+
+例如将之前的外观模式适配jQuery库
+
+``` javascript
+var Browser = {
+  event: {
+    add: function(dom, type, fn) {
+      $(dom).on(type, fn)
+    },
+
+    remove: function(dom, type, fn) {
+      $(dom).off(type, fn)
+    }
+
+    // ....
+  },
+
+  id: function(dom, id) {
+    return $(id).get(0)
+  }
+}
+```
+
+> 需要注意适配的时候为了做到兼容参数此时不能变。
+
+
+除了代码适配，还可以进行参数适配。当一个函数传入参数较多时，很难记住参数的顺序，因此可以通过传入对象来进行参数适配
+
+``` javascript
+function fn(name, age, job, desc) {}
+
+function adapter(obj) {
+  var _adapter = {
+    name: '',
+    age: 0,
+    job: 'web',
+    desc: ''
+  }
+
+  // 适配传入的参数
+  for(var key in _adapter) {
+    _adapter[key] = obj[key] || _adapter[key]
+  }
+}
+```
 
 
 
