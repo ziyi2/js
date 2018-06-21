@@ -83,6 +83,110 @@ JavaScript中的反模式示例如下
 |Visitor(访问者) |   |
 
 
+## Constructor(构造器)模式
+
+``` javascript
+function Person() {}
+var person = new Person()
+
+// 带原型的Constructor
+Person.prototype.getName = {}
+```
+
+## Module(模块)模式
+
+- 对象字面量表示法
+- Module模式
+- AMD模式
+- CommonJS模块
+- ECMAScript Harmony模块
+
+### 对象字面量表示法
+
+``` javascript
+let person = {
+  name: '',
+  age: 0,
+  getName: function() {},
+  getAge: function() {}
+}
+```
+
+### Module模式
+
+Module模式可以为类提供私有和公有的方法，Module模式会封装一个作用域，从而屏蔽来自全局作用域的特殊部分，使一个单独的对象拥有公有/私有的方法和变量。
+
+Module模式使用闭包封装私有状态和组织，提供一种包装混合公有/私有方法和变量的方式，防止其泄露至全局作用域，防止与全局作用域中的方法和变量发生冲突。通过该模式只需返回一个公有API，而其他的一切则都维持在私有闭包里。
+
+Module模式可以屏蔽处理底层时间逻辑，只暴露供应用程序调用的公有API，该模式返回的是一个对象而不是函数。
+
+
+``` javascript
+// 一个立即执行的匿名函数创建了一个作用域
+// 全局作用域无法获取私有变量_counter
+var moduleMode = (function() {
+  // 私有变量
+  var _counter = 0
+
+  // 返回一个公有对象
+  return {
+    // 公有API
+    increment: function() {
+      return ++_counter
+    },
+    // 公有API
+    reset: function() {
+      _counter = 0
+      return _counter
+    }
+  }
+})()
+
+let counter = moduleMode.increment()
+console.log(counter)
+counter = moduleMode.increment()
+console.log(counter)
+counter = moduleMode.reset()
+console.log(counter)
+// _counter is not defined
+console.log(_counter) 
+```
+> Module模式的本质是使用函数作用域来模拟私有变量，在模式内，由于闭包的存在，声明的变量和方法旨在改模式内部可用，但在返回对象上定义的变量和方法，则对外部使用者可用。
+
+
+Module模式也可用于命名空间
+
+``` javascript
+  // 返回一个公有对象
+  return {
+    // 公有变量
+    counter: 10,
+
+    // 公有API
+    increment: function() {
+       ++_counter
+       // 调用私有变量
+       _sayCounter()
+       return _counter
+    },
+    // 公有API
+    reset: function() {
+      _counter = 0
+      _sayCounter()
+      return _counter
+    }
+  }
+})()
+
+Namespace.increment()
+Namespace.increment()
+Namespace.reset()
+```
+
+
+
+
+
 
 
 ## 工厂模式
