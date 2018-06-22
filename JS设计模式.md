@@ -157,6 +157,15 @@ console.log(_counter)
 Module模式也可用于命名空间
 
 ``` javascript
+ var Namespace = (function() {
+  // 私有变量
+  var _counter = 0
+
+  // 私有方法
+  var _sayCounter = function() {
+    console.log(_counter)
+  }
+
   // 返回一个公有对象
   return {
     // 公有变量
