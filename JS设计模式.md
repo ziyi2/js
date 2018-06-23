@@ -193,7 +193,56 @@ Namespace.reset()
 ```
 
 
+### Module模式的变化
 
+#### 引入
+
+可以使jQuery、Underscore作为参数引入模块
+
+``` javascript
+var moduleMode = (function($, _) {
+  function _method() {
+    $('.container').html('test')
+  }
+
+  return {
+    method: function() {
+      _method()
+    }
+  }
+})($,_)
+
+moduleMode.method()
+```
+
+#### 引出
+
+``` javascript
+
+let moduleMode = (function() {
+  var public = {},
+      _private = 'hello'
+
+  function _method() {
+    console.log(_private)
+  }    
+
+  public.name = 'public'
+
+  public.method = function () {
+    _method()
+  }
+
+  return public
+})()
+
+console.log(moduleMode.name)
+```
+
+### Module模式的优缺点
+
+- 优点：整洁、支持私有数据。
+- 缺陷：私有数据难以维护（想改变可见性需要修改每一个使用该私有数据的地方），无法为私有成员创建自动化单元测试，开发人员无法轻易扩展私有方法。
 
 
 
