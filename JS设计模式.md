@@ -8,7 +8,6 @@
 
 ### 模式的优点
 
-
 - 复用模式有助于防止在应用程序开发过程中小问题引发大问题
 - 模式可以提供通用的解决方案
 - 某些模式可以通过避免代码复用减少代码的总体资源占用量
@@ -61,7 +60,6 @@ JavaScript中的反模式示例如下
 
 结构型与对象组合有关，通常可以用于找出在不同对象之间建立关系的简单方法。这种模式有助于确保在系统某一部分发生变化时，系统的整个结构不需要同时改变，同时对于不适合某一特定目的而改变的系统部分，也能够完成重组。
 
-
 |     设计模式 |   描述   |
 | :--------| :------: |
 | Iterator(装饰者) |   |
@@ -69,7 +67,6 @@ JavaScript中的反模式示例如下
 | Flyweight(享元) |   |
 | Adapter(适配器) |   |
 | Proxy(代理) |   |
-
 
 #### 行为
 
@@ -81,7 +78,6 @@ JavaScript中的反模式示例如下
 | Mediator(中介者) |   |
 |Observer(观察者) |   |
 |Visitor(访问者) |   |
-
 
 ## Constructor(构造器)模式
 
@@ -120,7 +116,6 @@ Module模式使用闭包封装私有状态和组织，提供一种包装混合�
 
 Module模式可以屏蔽处理底层时间逻辑，只暴露供应用程序调用的公有API，该模式返回的是一个对象而不是函数。
 
-
 ``` javascript
 // 一个立即执行的匿名函数创建了一个作用域
 // 全局作用域无法获取私有变量_counter
@@ -149,10 +144,10 @@ console.log(counter)
 counter = moduleMode.reset()
 console.log(counter)
 // _counter is not defined
-console.log(_counter) 
+console.log(_counter)
 ```
-> Module模式的本质是使用函数作用域来模拟私有变量，在模式内，由于闭包的存在，声明的变量和方法旨在改模式内部可用，但在返回对象上定义的变量和方法，则对外部使用者可用。
 
+> Module模式的本质是使用函数作用域来模拟私有变量，在模式内，由于闭包的存在，声明的变量和方法旨在改模式内部可用，但在返回对象上定义的变量和方法，则对外部使用者可用。
 
 Module模式也可用于命名空间
 
@@ -192,7 +187,6 @@ Namespace.increment()
 Namespace.reset()
 ```
 
-
 ### Module模式的变化
 
 #### 引入
@@ -225,7 +219,7 @@ let moduleMode = (function() {
 
   function _method() {
     console.log(_private)
-  }    
+  }
 
   public.name = 'public'
 
@@ -244,8 +238,244 @@ console.log(moduleMode.name)
 - 优点：整洁、支持私有数据。
 - 缺陷：私有数据难以维护（想改变可见性需要修改每一个使用该私有数据的地方），无法为私有成员创建自动化单元测试，开发人员无法轻易扩展私有方法。
 
+## Singleton(单例/单体)模式
+
+单例模式是只允许实例化一次的对象类，且单例对象可以延迟创建实例（"惰性创建"）
+
+``` javascript
+
+var Family = (function() {
+
+  // 单例引用, 私有属性
+  var _instance = null
+
+  // 单例对象
+  function Single() {
+
+    // 私有变量
+    var _names = []
+
+    // 对外抛出的公有方法, 闭包
+    return {
+      getNames: function() {
+        return _names
+      },
+      setNames: function(names) {
+        _names = names
+      }
+    }
+  }
+
+  // 获取单例对象接口，闭包
+  return function() {
+    if(!_instance) {
+      _instance = Single()
+    }
+    return _instance
+  }
+})()
 
 
+// 此时Family是一个function,并没有创建单例对象
+console.log(Family)
+
+// 此时创建了单例对象
+console.log(Family())
+
+Family().setNames(['1','2','3'])
+console.log(Family().getNames())
+```
+
+> 如果只需要被实例化一次，可以使用单例模式而不是其他创建型设计模式（工厂模式、建造者模式、原型模式）。
+
+单例模式作为一个静态的实例实现时，可以延迟创建实例，从而在没有使用该静态实例之前，无需使用资源或内存。同时当在系统中确实需要一个对象来协调其他对象时，Singleton模式非常有用。单例模式可以推迟初始化，通常是因为它需要一些信息，这些信息在初始化期间可能无法获得。
+
+``` javascript
+var Singleton = (function() {
+  function Single(options) {
+    options = options || {}
+    this.name = options.name || 'Single'
+    this.age = options.age || 1
+  }
+
+  var _instance
+
+  // 返回一个闭包，_instance不会被销毁
+  return {
+    name: 'Singleton',
+    getInstance: function(options) {
+      if(!_instance) {
+        _instance = new Single(options)
+      }
+      return _instance
+    }
+  }
+})()
+
+
+var single = Singleton.getInstance({
+  name: 'ziyi2',
+  age: 28
+})
+
+// Single {name: "ziyi2", age: 28}
+console.log(single)
+```
+
+## Observer(观察者)模式
+
+观察者模式是使用一个subject目标对象维持一系列依赖于它的observer观察者对象，将有关状态的任何变更自动通知给这一系列观察者对象。
+
+当subject目标对象需要告诉观察者发生了什么事情时，它会向观察者对象们广播一个通知（这里不仅可以是广播，也可以是单播或者多播）。
+
+> 一个或多个观察者对目标对象的状态感兴趣时，可以将自己依附在目标对象上以便注册感兴趣的目标对象的状态变化，目标对象的状态发生改变就会发送一个通知消息，调用每个观察者的更新方法。如果观察者对目标对象的状态不感兴趣，也可以将自己从中分离。
+
+
+|  对象 |   描述   |
+| :--------| :------: |
+| Subject(目标) | 维护一系列的观察者，方便添加、删除和通知观察者  |
+| Observer(观察者) | 为那些目标状态发生改变时需要通知的对象提供一个更新接口   |
+| subject(目标)实例对象 | 状态发生变化时通知观察者实例对象更新状态  |
+|observer(观察者)实例对象 | 实现更新接口用于更新状态   |
+
+### 观察者列表对象
+
+观察者列表对象用于维护一系列的观察者实例对象
+
+``` javascript
+// 观察者实例对象列表
+function ObserverList() {
+  this.observerList = []
+}
+
+// 增加观察者实例对象
+ObserverList.prototype.add = function(observer) {
+  return this.observerList.push(observer)
+}
+
+// 查看观察者实例对象的数量
+ObserverList.prototype.getCount = function() {
+  return this.observerList.length
+}
+
+// 获取某个观察者实例对象
+ObserverList.prototype.get = function(index) {
+  if(index < -1 || index > this.observerList.length) return
+  return this.observerList[index]
+}
+
+// 删改观察者实例对象的列表 省略...
+```
+
+### Subject(目标)对象
+
+使用观察者列表对象维护观察者实例对象，并可以通知观察者实例对象更新状态
+
+``` javascript
+// 目标对象（在观察者列表上增、删或通知观察者实例对象）
+function Subject() {
+  this.observers = new ObserverList()
+}
+
+// 增加观察者实例对象
+Subject.prototype.add = function(observer) {
+  this.observers.add(observer)
+}
+
+// 通知观察者列表更新
+Subject.prototype.notify = function(context) {
+  var count = this.observers.getCount()
+  for(var i=0; i<count; i++) {
+    this.observers.get(i).update(context)
+  }
+}
+```
+
+### Observer(观察者)对象
+
+主要用于提供更新接口
+
+``` javascript
+function Observer() {
+  // 更新目标实例对象的状态的接口
+  this.update = function() {}
+}
+```
+
+### 扩展对象
+
+扩展对象用于扩展观察者实例对象和目标实例对象
+
+``` javascript
+// obj -> 观察者实例对象或目标实例对象
+function extend(obj, extension) {
+  for(var key in obj) {
+    extension[key] = obj[key]
+  }
+}
+```
+
+### 具体的DOM元素用于创建观察者实例对象和目标实例对象
+
+创建DOM元素，用于扩展观察者实例对象和目标实例对象
+
+``` html
+<button id="btn">添加新的观察者实例对象</button>
+<!-- 目标实例对象 -->
+<input type="checkbox"  id="checkbox">
+<!-- 新创建的观察者实例对象的容器 -->
+<div id="div"></div>
+```
+
+创建目标实例对象
+
+``` javascript
+
+// 获取checkbox元素
+var checkbox = document.getElementById('checkbox')
+
+// 创建具体目标实例，并绑定到checkbox元素上
+extend(new Subject(), checkbox)
+
+// 点击checkbox会触发目标实例对象的通知方法
+// 广播到所有观察者实例对象促使它们调用更新状态方法
+checkbox.onclick = function() {
+  checkbox.notify(checkbox.checked)
+}
+```
+
+创建观察者实例对象
+
+``` javascript
+
+// 获取btn和div元素
+var btn = document.getElementById('btn'),
+    div = document.getElementById('div')
+
+btn.onclick = handlerClick
+
+function handlerClick() {
+  // 创建checkbox元素(注意和目标实例对象不同)
+  var input = document.createElement("input")
+  input.type = "checkbox"
+
+  // 创建具体的观察者实例，并绑定到checkbox元素上
+  extend(new Observer(), input)
+
+  // 重写观察者更新行为
+  input.update = function(value) {
+    this.checked = value
+  }
+
+  // 通过目标实例对象新增需要被广播的观察者实例对象
+  checkbox.add(input)
+
+  // 将观察者附到div元素上
+  div.appendChild(input)
+}
+```
+
+> 至此，通过按钮新增观察者实例对象，点击目标checkbox实例对象时，checkbox的状态会广播给所有新增的观察者实例对象checkbox，从而使目标实例对象的值和观察者实例对象的值保持一致，从而实现了观察者模式。
 
 ## 工厂模式
 
@@ -611,130 +841,6 @@ let person = prototypeExtend({
 console.log(person.name)
 console.log(person.getName())
 ```
-
-
-## 单例模式（单体模式）
-
-单例模式是只允许实例化一次的对象类，单例模式更多的用于命名空间。
-
-``` javascript
-// Family命名空间
-var Family = {
-  data: {
-    names: [],
-    ages: []
-  },
-
-  get: {
-    getNames: function() {
-      return this.names
-    },
-
-    getAges: function() {
-      return this.ages
-    }
-  },
-
-  set: {
-    setNames: function(names) {
-      this.names = names
-    },
-
-    setAges: function(ages) {
-      this.ages = ages
-    }
-  }
-}
-```
-
-例如模块分明的设计
-
-``` javascript
-var Ziyi2 = {
-  event: {},
-  dom: {},
-  style: {},
-  data: {}
-}
-```
-
-也可以创建静态变量，实现static关键字功能
-
-``` javascript
-
-var Family = (function() {
-  // 私有变量
-  var _names = []
-
-  // 闭包，对外抛出改变私有变量和获取私有变量的方法
-  return {
-    getNames: function() {
-      return _names
-    },
-    setNames: function(names) {
-      _names = names
-    }
-  }
-// 立即执行的匿名函数创建了局部作用域  
-})()
-
-Family.setNames(['1','2','3'])
-console.log(Family.getNames())
-```
->该单例模式在创建Family对象的时候立即执行了匿名函数，因此可以立即得到getNames和setNames方法，因此可以说是立即创建了单例对象。
-
-
-有的时候单例对象需要被延迟创建（"惰性创建"）
-
-``` javascript
-
-
-var Family = (function() {
-
-  // 单例引用, 私有属性
-  var _instance = null
-
-  // 单例对象
-  function Single() {
-
-    // 私有变量
-    var _names = []
-
-    // 对外抛出的公有方法, 闭包
-    return {
-      getNames: function() {
-        return _names
-      },
-      setNames: function(names) {
-        _names = names
-      }
-    }
-  }
-
-  // 获取单例对象接口，闭包
-  return function() {
-    if(!_instance) {
-      _instance = Single()
-    }
-    return _instance
-  }
-})()
-
-
-// 此时Family是一个function,并没有创建单例对象
-console.log(Family)
-
-// 此时创建了单例对象
-console.log(Family())
-
-Family().setNames(['1','2','3'])
-console.log(Family().getNames())
-```
-
-> 如果只需要被实例化一次，可以使用单例模式而不是其他创建型设计模式（工厂模式、建造者模式、原型模式），从而节省系统资源。
-
-
-
 
 ## 外观模式
 
