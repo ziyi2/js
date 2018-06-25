@@ -114,7 +114,7 @@ Module模式可以为类提供私有和公有的方法，Module模式会封装�
 
 Module模式使用闭包封装私有状态和组织，提供一种包装混合公有/私有方法和变量的方式，防止其泄露至全局作用域，防止与全局作用域中的方法和变量发生冲突。通过该模式只需返回一个公有API，而其他的一切则都维持在私有闭包里。
 
-Module模式可以屏蔽处理底层时间逻辑，只暴露供应用程序调用的公有API，该模式返回的是一个对象而不是函数。
+Module模式可以屏蔽处理底层事件逻辑，只暴露供应用程序调用的公有API，该模式返回的是一个对象而不是函数。
 
 ``` javascript
 // 一个立即执行的匿名函数创建了一个作用域
@@ -240,55 +240,7 @@ console.log(moduleMode.name)
 
 ## Singleton(单例/单体)模式
 
-单例模式是只允许实例化一次的对象类，且单例对象可以延迟创建实例（"惰性创建"）
-
-``` javascript
-
-var Family = (function() {
-
-  // 单例引用, 私有属性
-  var _instance = null
-
-  // 单例对象
-  function Single() {
-
-    // 私有变量
-    var _names = []
-
-    // 对外抛出的公有方法, 闭包
-    return {
-      getNames: function() {
-        return _names
-      },
-      setNames: function(names) {
-        _names = names
-      }
-    }
-  }
-
-  // 获取单例对象接口，闭包
-  return function() {
-    if(!_instance) {
-      _instance = Single()
-    }
-    return _instance
-  }
-})()
-
-
-// 此时Family是一个function,并没有创建单例对象
-console.log(Family)
-
-// 此时创建了单例对象
-console.log(Family())
-
-Family().setNames(['1','2','3'])
-console.log(Family().getNames())
-```
-
-> 如果只需要被实例化一次，可以使用单例模式而不是其他创建型设计模式（工厂模式、建造者模式、原型模式）。
-
-单例模式作为一个静态的实例实现时，可以延迟创建实例，从而在没有使用该静态实例之前，无需使用资源或内存。同时当在系统中确实需要一个对象来协调其他对象时，Singleton模式非常有用。单例模式可以推迟初始化，通常是因为它需要一些信息，这些信息在初始化期间可能无法获得。
+单例模式作为一个静态的实例实现时，可以延迟创建实例，从而在没有使用该静态实例之前，无需占用浏览器的资源或内存。同时当在系统中确实需要一个对象来协调其他对象时，Singleton模式非常有用。单例模式可以推迟初始化，通常是因为它需要一些信息，这些信息在初始化期间可能无法获得。
 
 ``` javascript
 var Singleton = (function() {
@@ -318,21 +270,18 @@ var single = Singleton.getInstance({
   age: 28
 })
 
-// Single {name: "ziyi2", age: 28}
+// Single {name: "ziyi2", age: 28}
 console.log(single)
 ```
 
 ## Observer(观察者)模式
 
-观察者模式是使用一个subject目标对象维持一系列依赖于它的observer观察者对象，将有关状态的任何变更自动通知给这一系列观察者对象。
-
-当subject目标对象需要告诉观察者发生了什么事情时，它会向观察者对象们广播一个通知（这里不仅可以是广播，也可以是单播或者多播）。
-
+观察者模式是使用一个subject目标对象维持一系列依赖于它的observer观察者对象，将有关状态的任何变更自动通知给这一系列观察者对象。当subject目标对象需要告诉观察者发生了什么事情时，它会向观察者对象们广播一个通知。
 > 一个或多个观察者对目标对象的状态感兴趣时，可以将自己依附在目标对象上以便注册感兴趣的目标对象的状态变化，目标对象的状态发生改变就会发送一个通知消息，调用每个观察者的更新方法。如果观察者对目标对象的状态不感兴趣，也可以将自己从中分离。
 
 
 |  对象 |   描述   |
-| :--------| :------: |
+| :--------| :------ |
 | Subject(目标) | 维护一系列的观察者，方便添加、删除和通知观察者  |
 | Observer(观察者) | 为那些目标状态发生改变时需要通知的对象提供一个更新接口   |
 | subject(目标)实例对象 | 状态发生变化时通知观察者实例对象更新状态  |
@@ -343,7 +292,7 @@ console.log(single)
 观察者列表对象用于维护一系列的观察者实例对象
 
 ``` javascript
-// 观察者实例对象列表
+// 观察者列表对象
 function ObserverList() {
   this.observerList = []
 }
@@ -372,7 +321,7 @@ ObserverList.prototype.get = function(index) {
 使用观察者列表对象维护观察者实例对象，并可以通知观察者实例对象更新状态
 
 ``` javascript
-// 目标对象（在观察者列表上增、删或通知观察者实例对象）
+// 目标对象（在观察者列表上增、删观察者实例对象）
 function Subject() {
   this.observers = new ObserverList()
 }
@@ -408,6 +357,7 @@ function Observer() {
 
 ``` javascript
 // obj -> 观察者实例对象或目标实例对象
+// extension -> 需要被扩展的对象
 function extend(obj, extension) {
   for(var key in obj) {
     extension[key] = obj[key]
@@ -430,7 +380,6 @@ function extend(obj, extension) {
 创建目标实例对象
 
 ``` javascript
-
 // 获取checkbox元素
 var checkbox = document.getElementById('checkbox')
 
@@ -447,7 +396,6 @@ checkbox.onclick = function() {
 创建观察者实例对象
 
 ``` javascript
-
 // 获取btn和div元素
 var btn = document.getElementById('btn'),
     div = document.getElementById('div')
@@ -475,7 +423,7 @@ function handlerClick() {
 }
 ```
 
-> 至此，通过按钮新增观察者实例对象，点击目标checkbox实例对象时，checkbox的状态会广播给所有新增的观察者实例对象checkbox，从而使目标实例对象的值和观察者实例对象的值保持一致，从而实现了观察者模式。
+> 至此，通过按钮新增观察者实例对象，点击目标checkbox实例对象时，checkbox的状态会广播给所有新增的观察者实例对象checkbox，从而使目标实例对象的值和观察者实例对象的值保持一致，实现了观察者模式。
 
 ## 工厂模式
 
