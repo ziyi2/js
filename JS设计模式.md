@@ -287,6 +287,11 @@ console.log(single)
 | subject(目标)实例对象 | 状态发生变化时通知观察者实例对象们更新状态  |
 |observer(观察者)实例对象 | 实现更新接口用于更新状态   |
 
+
+![Observer设计模式](https://raw.githubusercontent.com/ziyi2/js/master/images/Observer.png)
+
+
+
 ### 观察者列表对象
 
 观察者列表对象用于维护一系列的观察者实例对象
@@ -424,6 +429,19 @@ function handlerClick() {
 ```
 
 > 至此，通过按钮新增观察者实例对象，点击目标checkbox实例对象时，checkbox的状态会广播给所有新增的观察者实例对象checkbox，从而使目标实例对象的值和观察者实例对象的值保持一致，实现了观察者模式。
+
+
+### Observer(观察者)模式和Publish/Subscribe(发布/订阅)模式的区别
+
+
+
+
+
+
+
+
+
+
 
 ## 工厂模式
 
