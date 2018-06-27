@@ -544,6 +544,82 @@ Publish/Subscribe(发布/订阅)模式使用一个主题/事件通道，这个�
 具有一定的不稳定性，发布和订阅都是无状态的，发布无法知道订阅的运行情况。
 
 
+## Mediator(中介者)模式
+
+提供统一的公开接口，系统的不同部分可以通过该接口进行通信。中介者模式类似于信息中转站，例如系统的各个组件可以通过这个中心控制点（中介者模式）进行通信，而不是彼此引用，这种模式可以帮助解耦系统并提高组件的可重用性。
+
+``` javascript
+
+// 中介者模式
+var mediator = (function() {
+
+  var _channels = [],
+      _subUid = -1
+
+  function subscribe(channel, handler) {
+    if(!_channels[channel]) _channels[channel] = []
+    var token = (++_subUid).toString()
+    _channels[channel].push({
+      token: token,
+      context: this,
+      handler: handler
+    })
+    return token
+  }   
+ 
+  function publish(channel, data) {
+    if(!_channels[channel]) return false
+    var subscribers = _channels[channel]
+    var len = subscribers.length
+    while(len--) {
+      subscribers[len].handler.call(subscribers[len].context, data, channel, subscribers[len].token)
+    }
+    return this
+  }
+
+  function unsubscribe(token) {
+    for(var channel in _channels) {
+      var len = _channels[channel].length
+      for(var index=0; index<len; index++) {
+        if(_channels[channel][index].token === token) {
+          _channels[channel].splice(index, 1)
+          return token
+        }
+      }
+    }
+  }
+
+  // Module模式引出
+  return {
+    subscribe: subscribe,
+    publish: publish,
+    unsubscribe: unsubscribe,
+    // 绑定到其他对象使用该设计模式
+    installTo: function(obj) {
+      obj.subscribe = subscribe
+      obj.publish = publish 
+      obj.unsubscribe = unsubscribe
+    }
+  }
+})()
+
+mediator.subscribe('message', function(data, channel, token) {
+  // true
+  console.log(this === mediator) 
+  console.log(data)
+  console.log(channel)
+  console.log(token)
+})
+
+mediator.publish('message', 'hello world')
+```
+
+
+
+
+
+
+
 
 ## 工厂模式
 
