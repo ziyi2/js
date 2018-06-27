@@ -288,7 +288,7 @@ console.log(single)
 |observer(观察者)实例对象 | 实现更新接口用于更新状态   |
 
 
-![Observer设计模式](https://raw.githubusercontent.com/ziyi2/js/master/images/Observer.png)
+![观察者设计模式](https://raw.githubusercontent.com/ziyi2/js/master/images/Observer.png)
 
 
 
@@ -431,15 +431,117 @@ function handlerClick() {
 > 至此，通过按钮新增观察者实例对象，点击目标checkbox实例对象时，checkbox的状态会广播给所有新增的观察者实例对象checkbox，从而使目标实例对象的值和观察者实例对象的值保持一致，实现了观察者模式。
 
 
+## Publish/Subscribe(发布/订阅)模式
+ 
+
+![发布/订阅设计模式](https://raw.githubusercontent.com/ziyi2/js/master/images/pubsub.png)
+
+
+需要注意token是每一次订阅的唯一标识，通过token可以取消特定的频道订阅。
+
+
+
+``` javascript
+
+// 发布/订阅模式
+var pubsub = (function() {
+
+  // 订阅和发布的事件频道集（桥梁、中间带）
+  var _channels = [],
+      _subUid = -1
+
+  return {
+    // 订阅频道
+    subscribe: function(channel, handler) {
+      if(!_channels[channel]) _channels[channel] = []
+      var token = (++_subUid).toString()
+      _channels[channel].push({
+        token: token,
+        handler: handler
+      })
+      return token
+    },
+
+    // 广播频道
+    publish: function(channel, data) {
+      if(!_channels[channel]) return false
+      // 获取频道订阅者
+      var subscribers = _channels[channel]
+      var len = subscribers.length
+      // 后订阅先触发
+      while(len--) {
+        subscribers[len].handler(data, channel, subscribers[len].token)
+      }
+      return this
+    },
+
+    // 移除订阅
+    unsubscribe: function(token) {
+      for(var channel in _channels) {
+        var len = _channels[channel].length
+        for(var index=0; index<len; index++) {
+          if(_channels[channel][index].token === token) {
+            _channels[channel].splice(index, 1)
+            return token
+          }
+        }
+      }
+    }
+  }
+})()
+
+
+// 订阅频道0
+var token = pubsub.subscribe('channel0', function(data, channel, token) {
+  console.log('channel: ' +  channel +' data: ', data + ' token: ' + token)
+})
+
+// 订阅频道0
+pubsub.subscribe('channel0', function(data, channel, token) {
+  console.log('channel: ' +  channel +' data: ', data + ' token: ' + token)
+})
+
+// 广播频道0
+pubsub.publish('channel0', {
+  name: 'ziyi2',
+  age: 28
+})
+
+// 取消某个特定频道0的订阅
+pubsub.unsubscribe(token)
+
+// 继续广播频道0
+pubsub.publish('channel0', {
+  name: 'ziyi2',
+  age: 28
+})
+```
+
+
+
+
+
+
 ### Observer(观察者)模式和Publish/Subscribe(发布/订阅)模式的区别
 
 
+![观察者和发布/订阅模式对比](https://raw.githubusercontent.com/ziyi2/js/master/images/PublishSubscribe.png)
 
 
+Publish/Subscribe(发布/订阅)模式使用一个主题/事件通道，这个通道介于订阅者和发布者之间，该设计模式允许代码定义应用程序的特定事件，这些事件可以传递自定义参数，自定义参数包含订阅者需要的信息，采用事件通道可以避免发布者和订阅者之间产生依赖关系。
+
+需要注意的是，Observer(观察者)模式允许观察者实例对象(订阅者)执行适当的事件处理程序来注册和接收目标实例对象(发布者)发出的通知（即在观察者实例对象上注册update方法），使订阅者和发布者之间产生了依赖关系，且没有事件通道。
 
 
+### 优点 
 
 
+解耦，可用于设计分层以及分层之间的通信，可用于将应用程序分解为更小、更松散耦合的块，改进代码的管理和潜在复用，是设计解耦性系统的最佳模式。
+
+
+### 缺陷
+
+具有一定的不稳定性，发布和订阅都是无状态的，发布无法知道订阅的运行情况。
 
 
 
