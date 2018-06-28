@@ -623,6 +623,60 @@ Observer(观察者)模式：不存在封装约束的单一对象，目标对象�
 
 
 
+
+## 原型模式
+
+原型模式可以让多个构造函数对应的实例对象共享同一个原型对象的属性和方法，具体查看[ES5中类的继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)。
+
+
+如果创建实例对象的构造函数相对复杂，耗时较长，此时可以不用new关键字去复制这些基类，可以通过这些对象属性或方法进行复制来实现创造，这是原型模式最初的思想，通过原型继承的特点，首先创建一个原型模式的对象复制方法
+
+``` javascript
+
+// 基于已经存在的模板对象克隆新对象
+// 需要注意模板引用类型的属性进行了浅复制
+// 因此模板对象中的数组类型数据会被所有实例对象共享引用
+function prototypeExtend() {
+  var F = function() {},
+      args = arguments,
+      i = 0,
+      len = arguments.length
+
+  for(; i<len; i++) {
+    for(var key in arguments[i]) {
+      F.prototype[key] = arguments[i][key]
+    }
+  }   
+  return new F()
+}
+
+
+let person = prototypeExtend({
+  name: '111',
+  age: 28
+}, {
+  getName: function() {
+    return this.name
+  }
+}, {
+  getAge: function() {
+    return this.age
+  }
+})
+
+console.log(person.name)
+console.log(person.getName())
+```
+
+
+
+
+
+
+
+
+
+
 ## 工厂模式
 
 ### 简单工厂模式
@@ -944,49 +998,6 @@ person : Person {
 > 创建的对象更复杂，是一个复合对象。
 
 
-## 原型模式
-
-原型模式可以让多个构造函数对应的实例对象共享同一个原型对象的属性和方法，具体查看[ES5中类的继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)。
-
-
-如果创建实例对象的构造函数相对复杂，耗时较长，此时可以不用new关键字去复制这些基类，可以通过这些对象属性或方法进行复制来实现创造，这是原型模式最初的思想，通过原型继承的特点，首先创建一个原型模式的对象复制方法
-
-``` javascript
-
-// 基于已经存在的模板对象克隆新对象
-// 需要注意模板引用类型的属性进行了浅复制
-// 因此模板对象中的数组类型数据会被所有实例对象共享引用
-function prototypeExtend() {
-  var F = function() {},
-      args = arguments,
-      i = 0,
-      len = arguments.length
-
-  for(; i<len; i++) {
-    for(var key in arguments[i]) {
-      F.prototype[key] = arguments[i][key]
-    }
-  }   
-  return new F()
-}
-
-
-let person = prototypeExtend({
-  name: '111',
-  age: 28
-}, {
-  getName: function() {
-    return this.name
-  }
-}, {
-  getAge: function() {
-    return this.age
-  }
-})
-
-console.log(person.name)
-console.log(person.getName())
-```
 
 ## 外观模式
 
@@ -1083,7 +1094,7 @@ function adapter(obj) {
   // 适配传入的参数
   for(var key in _adapter) {
     _adapter[key] = obj[key] || _adapter[key]
-  }
+  }...............................................................................................................................
 }
 ```
 
