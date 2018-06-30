@@ -624,7 +624,7 @@ Observer(观察者)模式：不存在封装约束的单一对象，目标对象�
 
 
 
-## 原型模式
+## Prototype(原型)模式
 
 原型模式可以让多个构造函数对应的实例对象共享同一个原型对象的属性和方法，具体查看[ES5中类的继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)。
 
@@ -671,7 +671,7 @@ console.log(person.getName())
 
 
 
-## 命令模式
+## Command(命令)模式
 
 命令模式将命令执行者和命令发起者解耦，提供更大的整体灵活性。用类来做比喻就是，抽象类（类似于命令发起者）定义一个接口，但不为它的成员函数提供实现，作为一个基类派生出其他类，派生类（类似于命令执行者）首先具体接口。
 
@@ -703,7 +703,7 @@ command('destroy', { name: 'ziyi2', age: 28 })
 
 
 
-## 外观模式
+## Facade(外观)模式
 
 为复杂的子系统接口提供更高级的统一接口，通过这个接口使得对子系统接口的访问更容易，在JavaScript中有时也会用于对底层结构兼容性做统一封装来简化用户使用。
 
@@ -753,13 +753,7 @@ var Browser = {
 > 通过外观模式对接口的二次封装隐藏其复杂性，可以简化用户的使用，外观模式也可以结合Module(模块)模式使用，需要注意的是外观模式会产生隐性成本，在设计时需要衡量是否需要使用外观模式抽象和封装某些结构。
 
 
-
-
-
-
-
-
-## 工厂模式
+## Factory(工厂)模式
 
 ### 简单工厂模式
 
@@ -966,6 +960,76 @@ console.log(mother.getType())
 
 
 > 关于寄生组合式继承请查看[js类和继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)。抽象工厂模式中的抽象类创建的不是一个真实的对象实例，而是一个类簇，抽象类指定了类的结构，区别于简单工厂模式创建单一对象，工厂方法模式创建多类对象。不过这种模式应用的并不广泛，因为JavaScript中不支持抽象化创建于虚拟方法。
+
+
+## Mixin(混入)模式
+
+Mixin是可以轻松被一个子类或一组子类轻松继承功能的类，目的是函数复用。
+
+### 继承Mixin
+
+在JavaScript中，可以使用原型链轻松实现继承Mixin，具体可参考[寄生组合式继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)，Mixin类的方法和属性可以轻松被子类继承。
+
+### Mixin(混入)
+
+Mixin允许对象通过较低的复杂性借用（继承）功能。继承Mixin可以实现父类的属性和方法被多个子类继承，但是在复杂的业务场景中可能存在一个子类需要继承多个父类的情况。
+
+Mixin对象可以被视为具有可以在很多其他对象原型中轻松共享属性和方法的对象。
+
+
+``` javascript
+
+// mixin 混入对象
+// extend 被混入的对象
+var mixins = function(mixin, extend) {
+  // 指定特定的混入属性
+  if(arguments[2]) {
+    for(var i=2,len=arguments.length; i<len; i++) {
+      if(!mixin[arguments[i]]) continue
+      extend[arguments[i]] = mixin[arguments[i]]
+    }
+  // 混入全部
+  } else {
+    for(var key in mixin) {
+      // 被混入对象存在同名属性则不混入
+      if(!extend[key]) {
+        extend[key] = mixin[key]
+      }
+    }
+  }
+}
+
+// name混入对象
+var name = {
+  getName: function() {
+    return this.name
+  },
+
+  setName: function(name) {
+    this.name = name
+  }
+}
+
+// age混入对象
+var age = {
+  getAge: function() {
+    return this.age
+  },
+
+  setAge: function(age) {
+    this.age = age
+  }
+}
+
+
+// 子类
+function Person(name, age) {
+  this.name = name
+  this.age = age
+}
+```
+
+
 
 
 ## 建造者模式
