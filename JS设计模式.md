@@ -979,9 +979,10 @@ Mixin对象可以被视为具有可以在很多其他对象原型中轻松共享
 
 ``` javascript
 
+
 // mixin 混入对象
 // extend 被混入的对象
-var mixins = function(mixin, extend) {
+var mixins = function(extend, mixin) {
   // 指定特定的混入属性
   if(arguments[2]) {
     for(var i=2,len=arguments.length; i<len; i++) {
@@ -999,8 +1000,9 @@ var mixins = function(mixin, extend) {
   }
 }
 
+
 // name混入对象
-var name = {
+var personName = {
   getName: function() {
     return this.name
   },
@@ -1010,8 +1012,9 @@ var name = {
   }
 }
 
+
 // age混入对象
-var age = {
+var personAge = {
   getAge: function() {
     return this.age
   },
@@ -1021,13 +1024,28 @@ var age = {
   }
 }
 
-
-// 子类
+// 类
 function Person(name, age) {
   this.name = name
   this.age = age
 }
+
+mixins(Person.prototype, personName, 'getName')
+mixins(Person.prototype, personAge)
+
+var person = new Person('ziyi2', 11)
+// Person {name: "ziyi2", age: 11}
+// age:11
+// name:"ziyi2"
+// __proto__:
+// getAge:ƒ ()
+// getName:ƒ ()
+// setAge:ƒ (age)
+// constructor:ƒ Person(name, age)
+console.log(person)
 ```
+
+> Mixin有助于减少系统中的重复功能及增加函数复用，但是也存在一些缺陷，将Mixin导入对象原型会导致函数起源方面的不确定性以及原型污染。
 
 
 
