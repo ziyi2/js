@@ -1048,6 +1048,42 @@ console.log(person)
 > Mixin有助于减少系统中的重复功能及增加函数复用，但是也存在一些缺陷，将Mixin导入对象原型会导致函数起源方面的不确定性以及原型污染。
 
 
+## 装饰者模式
+
+装饰者模式旨在促进代码复用，提供了将行为添加至系统现有的类的功能，相对于类原有的基本功能来说不是必要的，如果是必要的，可以被合并到父类。装饰者在不改变原有对象的基本功能的基础上，对其功能进行扩展。
+
+
+```javascript
+function MacBook() {
+  this.cost = function() {
+    return 997
+  }
+  this.screenSize = function() {
+    return 11.6
+  }
+}
+
+
+function Memory(macbook) {
+  var v = macbook.cost()
+  macbook.cost = function() {
+    return v + 75
+  }
+}
+
+function Engraving(macbook) {
+  var v = macbook.cost()
+  macbook.cost = function() {
+    return v +200
+  }
+}
+
+
+var macbook = new MacBook()
+Memory(na)
+```
+
+
 
 
 ## 建造者模式
