@@ -1080,8 +1080,56 @@ function Engraving(macbook) {
 
 
 var macbook = new MacBook()
-Memory(na)
+Memory(macbook)
+Engraving(macbook)
+//1272
+console.log(macbook.cost()) 
 ```
+
+>  如果使用ES6语法，具体可以查看[ES6中的装饰者](http://es6.ruanyifeng.com/#docs/decorator)。装饰者模式如果管理不当，会极大的复杂化应用程序架构，因为向命名空间中引入了很多小型但类似的对象。
+
+
+
+``` javascript
+var decorator = function(dom, fn) {
+  if(typeof dom.onclick === 'function') {
+    // 获取原有的点击事件
+    var origin = dom.onclick
+    // 装饰dom的点击事件
+    dom.onclick = function(event) {
+      // 保留原有事件
+      origin.call(dom, event)
+      // 装饰新事件
+      fn.call(dom, event)
+    }
+  } else {
+    dom.onclick = fn()
+  }
+}
+
+
+var btn = document.getElementById('btn')
+// 原有的点击事件
+btn.onclick = function(event) {
+  console.log('origin btn click')
+}
+
+function fn(event) {
+  console.log('decorator btn click')
+}
+
+// 装饰btn
+decorator(btn, fn)
+```
+
+> 按钮原有的点击事件功能不变，在此基础上对按钮的点击功能进行了装饰。
+
+
+
+## Flyweight(享元)模式
+
+
+
 
 
 
