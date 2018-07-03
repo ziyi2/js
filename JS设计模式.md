@@ -1129,9 +1129,105 @@ decorator(btn, fn)
 ## Flyweight(享元)模式
 
 
+``` javascript
+// 享元接口
+var Flyweight = {
+  serverName: function() {},
+  getName: function() {}
+}
+
+// 享元具体实现
+function ConcreteFlyweight(newName) {
+  var _name = newName
+
+  // 如果已经为某一功能定义接口，则实现该功能
+  if(typeof this.getName === "function") {
+    this.getName = function() {
+      return _name
+    }
+  }
+
+  if(typeof this.serverName === "function") {
+    this.serverName = function(context) {
+      console.log('Server name ' + _name + ' to table number ' + context.getTable())
+    }
+  }
+}
 
 
+// 实现接口方法
+Function.prototype.implementsFor = function(Interface) {
+  if(Interface.constructor === Function) {
+    this.prototype = new Interface()
+    this.prototype.parent = Interface.prototype
+  } else {
+    this.prototype = Interface
+    this.prototype.parent = Interface
+  }
+  this.prototype.constructor = this
+}
 
+// 实现接口
+ConcreteFlyweight.implementsFor(Flyweight)
+
+
+function TableContext(tableNumber) {
+  return {
+    getTable: function() {
+      return tableNumber
+    }
+  }
+}
+
+
+// 享元工厂
+function FlyweightFactory() {
+  var _names = []
+
+  return {
+    getName: function(name) {
+      _name = new ConcreteFlyweight(name)
+      _names.push(_name)
+      return _name
+    },
+
+    getTotal: function() {
+      return _names.length
+    }
+  }
+}
+
+
+// 示例
+var names = new ConcreteFlyweight()
+var tables = new TableContext()
+
+var orders = 0
+var flyweightFactory
+function takeOrder(name, table) {
+  names[orders] = flyweightFactory.getName(name)
+  tables[orders ++] = new TableContext(table)
+}
+
+flyweightFactory = new FlyweightFactory()
+ 
+takeOrder('ziyi2', 1)
+takeOrder('ziyi2', 2)
+
+takeOrder('ply', 1)
+takeOrder('ply', 4)
+
+for(var i=0; i<orders; i++) {
+  names[i].serverName(tables[i])
+}
+// Server name ziyi2 to table number 1
+// Server name ziyi2 to table number 2
+// Server name ply to table number 1
+// Server name ply to table number 4
+
+console.log(flyweightFactory.getTotal())
+// 4
+```
 
 
 ## 建造者模式
