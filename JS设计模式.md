@@ -1229,6 +1229,184 @@ console.log(flyweightFactory.getTotal())
 // 4
 ```
 
+享元模式主要用于减少内存占用，对数据进行细化处理。本质是分离与共享，分离的是对象状态中的变与不变的部分，共享的是对象中不变的部分，把不变的部分作为享元对象的内部状态，而变化的部分则作为外部状态，由外部来维护。
+
+把内部状态分离出来共享，称之为享元，通过共享享元对象来减少对内存的占用。外部状态分离出来，放到外部，让应用在使用的时候进行维护，并在需要的时候传递给享元对象使用。为了控制对内部状态的共享，并且让外部能简单地使用共享数据，提供一个工厂来管理享元，把它称为享元工厂。
+
+
+享元模式的重点就在于分离变与不变。把一个对象的状态分成内部状态和外部状态，内部状态是不变的，外部状态是可变的。然后通过共享不变的部分，达到减少对象数量并节约内存的目的。
+
+
+享元模式真正缓存和共享的数据是享元的内部状态，而外部状态是不应该被缓存共享的。
+
+
+在享元模式中，为了创建和管理共享的享元部分，引入了享元工厂，享元工厂中一般都包含有享元对象的实例池，享元对象就是缓存在这个实例池中。所谓实例池，指的是缓存和管理对象实例的程序，通常实例池会提供对象实例的运行环境，并控制对象实例的生存周期。
+
+
+享元模式的调用顺序
+- 通过享元工厂来获取共享的享元对象
+- 创建相应的享元对象
+- 调用共享的享元对象的方法，传入外部状态
+
+
+
+享元模式用于减少应用程序所需对象的数量。这是通过将对象的内部状态划分为内在数据（instrinsic data）和外在数据（extrinsic data）两类而实现的。内在数据是指类的内部方法所需要的信息。没有这种数据的话类就不能正常运行。外在数据则是可以从类身上剥离并存储在其外部的信息。我们可以将内在状态相同的所有对象替换为同一个共享对象，用这种方法可以把对象数量减少到不同内在状态的数量。
+
+ 创建这种共享对象需要使用工厂，而不是普通的构造函数。这样做可以跟踪到已经实例化的各个对象，从而仅当所需对象的内在状态不同于已有对象时才创建一个新对象。对象的外在状态被曝存在一个管理器对象中。在调用对象的方法时，管理器会把这些外在状态作为参数传入。
+
+
+假设要开发一个系统，用以代表一个城市的所有汽车。你需要保存每一辆汽车的详细情况（品牌，型号和出厂日期）及其所有权的详细情况（车主姓名，车牌号和最近登记日期）。当然，你决定把每辆汽车表示为一个对象：
+
+
+``` javascript
+
+/**
+  * Car类
+  * @param make 品牌
+  * @param model 型号
+  * @param year 出厂日期
+  * @param owner 车主姓名
+  * @param tag 车牌号
+  * @param renewDate 最近登记日期
+  * @constructor Car
+  */
+ 
+var Car = function (make, model, year, owner, tag, renewDate) {
+  this.make = make;
+  this.model = model;
+  this.year = year;
+  this.owner = owner;
+  this.tag = tag;
+  this.renewDate = renewDate;
+ };
+ 
+Car.prototype = {
+   getMake: function () {
+     return this.make;
+   },
+   getModel: function () {
+     return this.model;
+   },
+   getYear: function () {
+     return this.year;
+   },
+   transferOwnership: function (newOwner, newTag, newRenewDate) {
+     this.owner = newOwner;
+     this.tag = newTag;
+     this.renewDate = newRenewDate;
+   },
+   renewRegistration: function (newRenewDate) {
+     this.renewDate = newRenewDate;
+   },
+   isRegistrationCurrent: function () {
+     var today = new Date();
+     return today.getTime() < Date.parse(this.renewDate);
+   }
+ };  
+
+```
+
+这个系统最初表现不错。但是随着城市人口的增长，你发现它一天天地变慢。数以十万计的汽车对象耗尽了可用的计算资源。要想优化这个系统，可以采用享元模式减少所需对象的数目。
+
+优化工作的第一步是把内在状态与外在状态分开。
+
+将对象数据划分为内在和外在部分的过程有一定的随意性。既要维持每个对象的模块性，又想把尽可能多的数据作为外在数据处理。划分依据的选择多少有些主观性。在本例中，车的自然数据（品牌，型号和出厂日期）属于内在数据，而所有权数据（车主姓名，车牌号和最近登记日期）则属于外在数据。这意味着对于品牌，型号和出厂日期的每一种组合，只需要一个汽车对象就行，这个数目还是不少，不过与之前相比已经少了几个数量级。每个品牌-型号=出厂日期组合对应的那个实例将被所有该类型汽车的车主共享。下面是新版Car类的代码：
+
+``` javascript
+var Car = function (make, model, year) {
+    this.make = make;
+    this.model = model;
+    this.year = year;
+};
+
+Car.prototype = {
+     getMake: function () {
+         return this.make;
+     },
+     getModel: function () {
+         return this.model;
+     },
+     getYear: function () {
+         return this.year;
+     }
+ };
+```
+
+上面的代码删除了所有外在数据。所有处理登记事宜的方法都被转移到一个管理其对象中（不过，也可以将这些方法留在原地，并为其增加对应于各种外在数据的参数）。因为现在对象的数据已被分为两大部分，所以必须用工厂来实例化它。
+
+ 用工厂进行实例化，这个工厂很简单。它会检查之前是否已经创建过对应于指定品牌-型号-出厂日期组合的汽车，如果存在这样的汽车那就返回它，否则创建一辆新车，并把它包村起来供以后使用。这就确保了对应于每个唯一的内在状态，只会创建一个实例：
+
+``` javascript
+
+var CarFactory = (function () {
+	 // 实例池
+     var createdCars = {};
+ 
+     return {
+         /**
+          * 工厂方法
+          * @param make 品牌
+          * @param model 型号
+          * @param year 出厂日期
+          * @return new Car()
+          */
+         createCar: function (make, model, year) {
+             if (createdCars[make + '-' + model + '-' + year]) {
+                 return createdCars[make + '-' + model + '-' + year];
+             } else {
+                 var car = new Car(make, model, year);
+                 createdCars[make + '-' + model + '-' + year] = car;
+                 return car;
+             }
+         }
+     };
+ })();
+
+```
+
+
+封装在管理器中的外在状态要完成这种优化还需要一个对象。所有那些从Car对象中删除的数据必须有个保存地点，我们用一个单体来做封装这些数据的管理器。原先的每一个Car对象现在都被分割为外在数据及其所属的共享汽车对象的引用这样两部分。Car对象与车主数据的组合称为汽车记录（car record）。管理器存储着这两方面的信息。它还包含着从原先的Car类删除的方法：
+
+``` javascript
+var CarRecordManager = (function () {
+     var carRecordDatabase = {};
+ 
+     return {
+         // Add a new car record into the city's system
+         addCarRecord: function (make, model, year, owner, tag, renewDate) {
+             var car = CarFactory.createCar(make, model, year);
+             carRecordDatabase[tag] = {
+                 owner: owner,
+                 renewDate: renewDate,
+                 car: car
+             };
+         },
+         // Methods previously contained in the Car class.
+         transferOwnership: function (tag, newOwner, newTag, newRenewDate) {
+             var record = carRecordDatabase[tag];
+             record.owner = newOwner;
+             record.tag = newTag;
+             record.renewDate = newRenewDate;
+         },
+         renewRegistration: function (tag, newRenewDate) {
+             carRecordDatabase[tag].renewDate = newRenewDate;
+         },
+         isRegistrationCurrent: function (tag) {
+             var today = new Date();
+             return today.getTime() < Date.parse(carRecordDatabase[tag].renewDate);
+         }
+     };
+ })();
+```
+
+从Car类剥离的所有数据现在都保存在CarRecordManager这个单体的私用属性carRecordDatabase中。这个carRecordDatabase对象要比以前使用的一大批对象高效得多。那些处理所有权事宜的方法现在也被封装在这个单体中，因为他们处理的都是外在数据。可以看出，这种优化是以复杂为代价的。原先有的只是一个类，而现在却变成了一个类和两个单体对象。把一个对象的数据保存在两个不同的地方这种做法有点令人困惑，但与所解决的性能问题相比，这两点都只是小问题。如果运用得当，那么享元模式能够显著的提升程序的性能。
+
+
+管理享元对象的外在数据有许多不同方法。使用管理器对象是一种常见做法，这种对象有一个集中管理的数据库（centralized database），用于存放外在状态及其所属的享元对象。汽车登记示例就采用了这种方案。其优点在于简单，容易维护。这也是一种比较轻便的方案，因为用来保存外在数据的只是一个数组或对象字面量。
+
+
+
+
 
 ## 建造者模式
 
