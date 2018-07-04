@@ -288,7 +288,7 @@ console.log(single)
 |observer(观察者)实例对象 | 实现更新接口用于更新状态   |
 
 
-![Observer设计模式](https://raw.githubusercontent.com/ziyi2/js/master/images/Observer.png)
+![观察者设计模式](https://raw.githubusercontent.com/ziyi2/js/master/images/Observer.png)
 
 
 
@@ -431,19 +431,329 @@ function handlerClick() {
 > 至此，通过按钮新增观察者实例对象，点击目标checkbox实例对象时，checkbox的状态会广播给所有新增的观察者实例对象checkbox，从而使目标实例对象的值和观察者实例对象的值保持一致，实现了观察者模式。
 
 
+## Publish/Subscribe(发布/订阅)模式
+ 
+
+![发布/订阅设计模式](https://raw.githubusercontent.com/ziyi2/js/master/images/pubsub.png)
+
+
+需要注意token是每一次订阅的唯一标识，通过token可以取消特定的频道订阅。
+
+
+
+``` javascript
+
+// 发布/订阅模式
+var pubsub = (function() {
+
+  // 订阅和发布的事件频道集（桥梁、中间带）
+  var _channels = [],
+      _subUid = -1
+
+  return {
+    // 订阅频道
+    subscribe: function(channel, handler) {
+      if(!_channels[channel]) _channels[channel] = []
+      var token = (++_subUid).toString()
+      _channels[channel].push({
+        token: token,
+        handler: handler
+      })
+      return token
+    },
+
+    // 广播频道
+    publish: function(channel, data) {
+      if(!_channels[channel]) return false
+      // 获取频道订阅者
+      var subscribers = _channels[channel]
+      var len = subscribers.length
+      // 后订阅先触发
+      while(len--) {
+        subscribers[len].handler(data, channel, subscribers[len].token)
+      }
+      return this
+    },
+
+    // 移除订阅
+    unsubscribe: function(token) {
+      for(var channel in _channels) {
+        var len = _channels[channel].length
+        for(var index=0; index<len; index++) {
+          if(_channels[channel][index].token === token) {
+            _channels[channel].splice(index, 1)
+            return token
+          }
+        }
+      }
+    }
+  }
+})()
+
+
+// 订阅频道0
+var token = pubsub.subscribe('channel0', function(data, channel, token) {
+  console.log('channel: ' +  channel +' data: ', data + ' token: ' + token)
+})
+
+// 订阅频道0
+pubsub.subscribe('channel0', function(data, channel, token) {
+  console.log('channel: ' +  channel +' data: ', data + ' token: ' + token)
+})
+
+// 广播频道0
+pubsub.publish('channel0', {
+  name: 'ziyi2',
+  age: 28
+})
+
+// 取消某个特定频道0的订阅
+pubsub.unsubscribe(token)
+
+// 继续广播频道0
+pubsub.publish('channel0', {
+  name: 'ziyi2',
+  age: 28
+})
+```
+
+
+
+
+
+
 ### Observer(观察者)模式和Publish/Subscribe(发布/订阅)模式的区别
 
 
+![观察者和发布/订阅模式对比](https://raw.githubusercontent.com/ziyi2/js/master/images/PublishSubscribe.png)
+
+
+Publish/Subscribe(发布/订阅)模式使用一个主题/事件通道，这个通道介于订阅者和发布者之间，该设计模式允许代码定义应用程序的特定事件，这些事件可以传递自定义参数，自定义参数包含订阅者需要的信息，采用事件通道可以避免发布者和订阅者之间产生依赖关系。
+
+需要注意的是，Observer(观察者)模式允许观察者实例对象(订阅者)执行适当的事件处理程序来注册和接收目标实例对象(发布者)发出的通知（即在观察者实例对象上注册update方法），使订阅者和发布者之间产生了依赖关系，且没有事件通道。
+
+
+### 优点 
+
+
+解耦，可用于设计分层以及分层之间的通信，可用于将应用程序分解为更小、更松散耦合的块，改进代码的管理和潜在复用，是设计解耦性系统的最佳模式。
+
+
+### 缺陷
+
+具有一定的不稳定性，发布和订阅都是无状态的，发布无法知道订阅的运行情况。
+
+
+## Mediator(中介者)模式
+
+提供统一的公开接口，系统的不同部分可以通过该接口进行通信。中介者模式类似于信息中转站，例如系统的各个组件可以通过这个中心控制点（中介者模式）进行通信，而不是彼此引用，这种模式可以帮助解耦系统并提高组件的可重用性。
+
+``` javascript
+
+// 中介者模式
+var mediator = (function() {
+
+  var _channels = [],
+      _subUid = -1
+
+  function subscribe(channel, handler) {
+    if(!_channels[channel]) _channels[channel] = []
+    var token = (++_subUid).toString()
+    _channels[channel].push({
+      token: token,
+      context: this,
+      handler: handler
+    })
+    return token
+  }   
+ 
+  function publish(channel, data) {
+    if(!_channels[channel]) return false
+    var subscribers = _channels[channel]
+    var len = subscribers.length
+    while(len--) {
+      subscribers[len].handler.call(subscribers[len].context, data, channel, subscribers[len].token)
+    }
+    return this
+  }
+
+  function unsubscribe(token) {
+    for(var channel in _channels) {
+      var len = _channels[channel].length
+      for(var index=0; index<len; index++) {
+        if(_channels[channel][index].token === token) {
+          _channels[channel].splice(index, 1)
+          return token
+        }
+      }
+    }
+  }
+
+  // Module模式引出
+  return {
+    subscribe: subscribe,
+    publish: publish,
+    unsubscribe: unsubscribe,
+    // 绑定到其他对象使用该设计模式
+    installTo: function(obj) {
+      obj.subscribe = subscribe
+      obj.publish = publish 
+      obj.unsubscribe = unsubscribe
+    }
+  }
+})()
+
+mediator.subscribe('message', function(data, channel, token) {
+  // true
+  console.log(this === mediator) 
+  console.log(data)
+  console.log(channel)
+  console.log(token)
+})
+
+mediator.publish('message', 'hello world')
+```
+
+
+### Mediator(中介者)模式和Observer(观察者)模式
+
+Mediator(中介者)模式：单一目标通常有很多观察者，有时一个目标的观察者是另一个观察者的目标。通信可以实现双向。
+Observer(观察者)模式：不存在封装约束的单一对象，目标对象和观察者对象必须合作才能维持约束。 观察者对象向订阅它们的对象发布其感兴趣的事件。通信只能是单向的。
 
 
 
 
 
+## Prototype(原型)模式
+
+原型模式可以让多个构造函数对应的实例对象共享同一个原型对象的属性和方法，具体查看[ES5中类的继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)。
+
+
+如果创建实例对象的构造函数相对复杂，耗时较长，此时可以不用new关键字去复制这些基类，可以通过这些对象属性或方法进行复制来实现创造，这是原型模式最初的思想，通过原型继承的特点，首先创建一个原型模式的对象复制方法
+
+``` javascript
+
+// 基于已经存在的模板对象克隆新对象
+// 需要注意模板引用类型的属性进行了浅复制
+// 因此模板对象中的数组类型数据会被所有实例对象共享引用
+function prototypeExtend() {
+  var F = function() {},
+      args = arguments,
+      i = 0,
+      len = arguments.length
+
+  for(; i<len; i++) {
+    for(var key in arguments[i]) {
+      F.prototype[key] = arguments[i][key]
+    }
+  }   
+  return new F()
+}
+
+
+let person = prototypeExtend({
+  name: '111',
+  age: 28
+}, {
+  getName: function() {
+    return this.name
+  }
+}, {
+  getAge: function() {
+    return this.age
+  }
+})
+
+console.log(person.name)
+console.log(person.getName())
+```
 
 
 
 
-## 工厂模式
+## Command(命令)模式
+
+命令模式将命令执行者和命令发起者解耦，提供更大的整体灵活性。用类来做比喻就是，抽象类（类似于命令发起者）定义一个接口，但不为它的成员函数提供实现，作为一个基类派生出其他类，派生类（类似于命令执行者）首先具体接口。
+
+命令模式主要思想是提供一种分离职责的手段，这样可以做到松耦合。假如不采用命令模式，直接调用命令执行者的API，一旦这些API发生改变，那么要求程序里所有访问这些API的命令执行者都需要进行修改，从而被视为一个耦合层。
+
+``` javascript
+// 命令模式
+var command = (function() {
+  // 命令执行者
+  var action = {
+    create: function(data) {
+      console.log('create command fired: ', data)
+    },
+
+    destroy: function(data) {
+      console.log('destroy command fired: ', data)
+    }
+  }
+
+  // 命令发起者
+  return function run(name) {
+    return action[name] && action[name].apply(action, [].slice.call(arguments, 1))
+  }
+})()
+
+command('create', { name: 'ziyi2', age: 28 })
+command('destroy', { name: 'ziyi2', age: 28 })
+```
+
+
+
+## Facade(外观)模式
+
+为复杂的子系统接口提供更高级的统一接口，通过这个接口使得对子系统接口的访问更容易，在JavaScript中有时也会用于对底层结构兼容性做统一封装来简化用户使用。
+
+``` javascript
+var Browser = {
+  event: {
+    add: function(dom, type, fn) {
+      if(dom.addEventListener) {
+        dom.addEventListener(type, fn, false)
+      } else if(dom.attachEvent) {
+        dom.attachEvent('on'+type, fn)
+      } else {
+        dom['on'+ type] = fn
+      }
+    },
+
+    remove: function() {
+      // ...
+    },
+
+    self: function(event) {
+      return event || window.event
+    },
+
+    target: function(event) {
+      return event.target || event.srcElement
+    },
+
+    preventDefault: function(event) {
+      let event = this.event.self(event)
+      event.preventDefault 
+      ? event.preventDefault() 
+      : event.returnValue = false
+    }
+  },
+
+  id: function(dom, id) {
+    return dom.getElementById(id)
+  },
+
+  html: function(dom, id, html) {
+    this.id(dom, id).innerHTML = html
+  }
+}
+```
+
+> 通过外观模式对接口的二次封装隐藏其复杂性，可以简化用户的使用，外观模式也可以结合Module(模块)模式使用，需要注意的是外观模式会产生隐性成本，在设计时需要衡量是否需要使用外观模式抽象和封装某些结构。
+
+
+## Factory(工厂)模式
 
 ### 简单工厂模式
 
@@ -652,6 +962,452 @@ console.log(mother.getType())
 > 关于寄生组合式继承请查看[js类和继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)。抽象工厂模式中的抽象类创建的不是一个真实的对象实例，而是一个类簇，抽象类指定了类的结构，区别于简单工厂模式创建单一对象，工厂方法模式创建多类对象。不过这种模式应用的并不广泛，因为JavaScript中不支持抽象化创建于虚拟方法。
 
 
+## Mixin(混入)模式
+
+Mixin是可以轻松被一个子类或一组子类轻松继承功能的类，目的是函数复用。
+
+### 继承Mixin
+
+在JavaScript中，可以使用原型链轻松实现继承Mixin，具体可参考[寄生组合式继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)，Mixin类的方法和属性可以轻松被子类继承。
+
+### Mixin(混入)
+
+Mixin允许对象通过较低的复杂性借用（继承）功能。继承Mixin可以实现父类的属性和方法被多个子类继承，但是在复杂的业务场景中可能存在一个子类需要继承多个父类的情况。
+
+Mixin对象可以被视为具有可以在很多其他对象原型中轻松共享属性和方法的对象。
+
+
+``` javascript
+
+
+// mixin 混入对象
+// extend 被混入的对象
+var mixins = function(extend, mixin) {
+  // 指定特定的混入属性
+  if(arguments[2]) {
+    for(var i=2,len=arguments.length; i<len; i++) {
+      if(!mixin[arguments[i]]) continue
+      extend[arguments[i]] = mixin[arguments[i]]
+    }
+  // 混入全部
+  } else {
+    for(var key in mixin) {
+      // 被混入对象存在同名属性则不混入
+      if(!extend[key]) {
+        extend[key] = mixin[key]
+      }
+    }
+  }
+}
+
+
+// name混入对象
+var personName = {
+  getName: function() {
+    return this.name
+  },
+
+  setName: function(name) {
+    this.name = name
+  }
+}
+
+
+// age混入对象
+var personAge = {
+  getAge: function() {
+    return this.age
+  },
+
+  setAge: function(age) {
+    this.age = age
+  }
+}
+
+// 类
+function Person(name, age) {
+  this.name = name
+  this.age = age
+}
+
+mixins(Person.prototype, personName, 'getName')
+mixins(Person.prototype, personAge)
+
+var person = new Person('ziyi2', 11)
+// Person {name: "ziyi2", age: 11}
+// age:11
+// name:"ziyi2"
+// __proto__:
+// getAge:ƒ ()
+// getName:ƒ ()
+// setAge:ƒ (age)
+// constructor:ƒ Person(name, age)
+console.log(person)
+```
+
+> Mixin有助于减少系统中的重复功能及增加函数复用，但是也存在一些缺陷，将Mixin导入对象原型会导致函数起源方面的不确定性以及原型污染。
+
+
+## 装饰者模式
+
+装饰者模式旨在促进代码复用，提供了将行为添加至系统现有的类的功能，相对于类原有的基本功能来说不是必要的，如果是必要的，可以被合并到父类。装饰者在不改变原有对象的基本功能的基础上，对其功能进行扩展。
+
+
+```javascript
+function MacBook() {
+  this.cost = function() {
+    return 997
+  }
+  this.screenSize = function() {
+    return 11.6
+  }
+}
+
+
+function Memory(macbook) {
+  var v = macbook.cost()
+  macbook.cost = function() {
+    return v + 75
+  }
+}
+
+function Engraving(macbook) {
+  var v = macbook.cost()
+  macbook.cost = function() {
+    return v +200
+  }
+}
+
+
+var macbook = new MacBook()
+Memory(macbook)
+Engraving(macbook)
+//1272
+console.log(macbook.cost()) 
+```
+
+>  如果使用ES6语法，具体可以查看[ES6中的装饰者](http://es6.ruanyifeng.com/#docs/decorator)。装饰者模式如果管理不当，会极大的复杂化应用程序架构，因为向命名空间中引入了很多小型但类似的对象。
+
+
+
+``` javascript
+var decorator = function(dom, fn) {
+  if(typeof dom.onclick === 'function') {
+    // 获取原有的点击事件
+    var origin = dom.onclick
+    // 装饰dom的点击事件
+    dom.onclick = function(event) {
+      // 保留原有事件
+      origin.call(dom, event)
+      // 装饰新事件
+      fn.call(dom, event)
+    }
+  } else {
+    dom.onclick = fn()
+  }
+}
+
+
+var btn = document.getElementById('btn')
+// 原有的点击事件
+btn.onclick = function(event) {
+  console.log('origin btn click')
+}
+
+function fn(event) {
+  console.log('decorator btn click')
+}
+
+// 装饰btn
+decorator(btn, fn)
+```
+
+> 按钮原有的点击事件功能不变，在此基础上对按钮的点击功能进行了装饰。
+
+
+
+## Flyweight(享元)模式
+
+
+``` javascript
+// 享元接口
+var Flyweight = {
+  serverName: function() {},
+  getName: function() {}
+}
+
+// 享元具体实现
+function ConcreteFlyweight(newName) {
+  var _name = newName
+
+  // 如果已经为某一功能定义接口，则实现该功能
+  if(typeof this.getName === "function") {
+    this.getName = function() {
+      return _name
+    }
+  }
+
+  if(typeof this.serverName === "function") {
+    this.serverName = function(context) {
+      console.log('Server name ' + _name + ' to table number ' + context.getTable())
+    }
+  }
+}
+
+
+// 实现接口方法
+Function.prototype.implementsFor = function(Interface) {
+  if(Interface.constructor === Function) {
+    this.prototype = new Interface()
+    this.prototype.parent = Interface.prototype
+  } else {
+    this.prototype = Interface
+    this.prototype.parent = Interface
+  }
+  this.prototype.constructor = this
+}
+
+// 实现接口
+ConcreteFlyweight.implementsFor(Flyweight)
+
+
+function TableContext(tableNumber) {
+  return {
+    getTable: function() {
+      return tableNumber
+    }
+  }
+}
+
+
+// 享元工厂
+function FlyweightFactory() {
+  var _names = []
+
+  return {
+    getName: function(name) {
+      _name = new ConcreteFlyweight(name)
+      _names.push(_name)
+      return _name
+    },
+
+    getTotal: function() {
+      return _names.length
+    }
+  }
+}
+
+
+// 示例
+var names = new ConcreteFlyweight()
+var tables = new TableContext()
+
+var orders = 0
+var flyweightFactory
+function takeOrder(name, table) {
+  names[orders] = flyweightFactory.getName(name)
+  tables[orders ++] = new TableContext(table)
+}
+
+flyweightFactory = new FlyweightFactory()
+ 
+takeOrder('ziyi2', 1)
+takeOrder('ziyi2', 2)
+
+takeOrder('ply', 1)
+takeOrder('ply', 4)
+
+for(var i=0; i<orders; i++) {
+  names[i].serverName(tables[i])
+}
+// Server name ziyi2 to table number 1
+// Server name ziyi2 to table number 2
+// Server name ply to table number 1
+// Server name ply to table number 4
+
+console.log(flyweightFactory.getTotal())
+// 4
+```
+
+享元模式主要用于减少内存占用，对数据进行细化处理。本质是分离与共享，分离的是对象状态中的变与不变的部分，共享的是对象中不变的部分，把不变的部分作为享元对象的内部状态，而变化的部分则作为外部状态，由外部来维护。
+
+把内部状态分离出来共享，称之为享元，通过共享享元对象来减少对内存的占用。外部状态分离出来，放到外部，让应用在使用的时候进行维护，并在需要的时候传递给享元对象使用。为了控制对内部状态的共享，并且让外部能简单地使用共享数据，提供一个工厂来管理享元，把它称为享元工厂。
+
+
+享元模式的重点就在于分离变与不变。把一个对象的状态分成内部状态和外部状态，内部状态是不变的，外部状态是可变的。然后通过共享不变的部分，达到减少对象数量并节约内存的目的。
+
+
+享元模式真正缓存和共享的数据是享元的内部状态，而外部状态是不应该被缓存共享的。
+
+
+在享元模式中，为了创建和管理共享的享元部分，引入了享元工厂，享元工厂中一般都包含有享元对象的实例池，享元对象就是缓存在这个实例池中。所谓实例池，指的是缓存和管理对象实例的程序，通常实例池会提供对象实例的运行环境，并控制对象实例的生存周期。
+
+
+享元模式的调用顺序
+- 通过享元工厂来获取共享的享元对象
+- 创建相应的享元对象
+- 调用共享的享元对象的方法，传入外部状态
+
+
+
+享元模式用于减少应用程序所需对象的数量。这是通过将对象的内部状态划分为内在数据（instrinsic data）和外在数据（extrinsic data）两类而实现的。内在数据是指类的内部方法所需要的信息。没有这种数据的话类就不能正常运行。外在数据则是可以从类身上剥离并存储在其外部的信息。我们可以将内在状态相同的所有对象替换为同一个共享对象，用这种方法可以把对象数量减少到不同内在状态的数量。
+
+ 创建这种共享对象需要使用工厂，而不是普通的构造函数。这样做可以跟踪到已经实例化的各个对象，从而仅当所需对象的内在状态不同于已有对象时才创建一个新对象。对象的外在状态被曝存在一个管理器对象中。在调用对象的方法时，管理器会把这些外在状态作为参数传入。
+
+
+假设要开发一个系统，用以代表一个城市的所有汽车。你需要保存每一辆汽车的详细情况（品牌，型号和出厂日期）及其所有权的详细情况（车主姓名，车牌号和最近登记日期）。当然，你决定把每辆汽车表示为一个对象：
+
+
+``` javascript
+
+/**
+  * Car类
+  * @param make 品牌
+  * @param model 型号
+  * @param year 出厂日期
+  * @param owner 车主姓名
+  * @param tag 车牌号
+  * @param renewDate 最近登记日期
+  * @constructor Car
+  */
+ 
+var Car = function (make, model, year, owner, tag, renewDate) {
+  this.make = make;
+  this.model = model;
+  this.year = year;
+  this.owner = owner;
+  this.tag = tag;
+  this.renewDate = renewDate;
+ };
+ 
+Car.prototype = {
+   getMake: function () {
+     return this.make;
+   },
+   getModel: function () {
+     return this.model;
+   },
+   getYear: function () {
+     return this.year;
+   },
+   transferOwnership: function (newOwner, newTag, newRenewDate) {
+     this.owner = newOwner;
+     this.tag = newTag;
+     this.renewDate = newRenewDate;
+   },
+   renewRegistration: function (newRenewDate) {
+     this.renewDate = newRenewDate;
+   },
+   isRegistrationCurrent: function () {
+     var today = new Date();
+     return today.getTime() < Date.parse(this.renewDate);
+   }
+ };  
+
+```
+
+这个系统最初表现不错。但是随着城市人口的增长，你发现它一天天地变慢。数以十万计的汽车对象耗尽了可用的计算资源。要想优化这个系统，可以采用享元模式减少所需对象的数目。
+
+优化工作的第一步是把内在状态与外在状态分开。
+
+将对象数据划分为内在和外在部分的过程有一定的随意性。既要维持每个对象的模块性，又想把尽可能多的数据作为外在数据处理。划分依据的选择多少有些主观性。在本例中，车的自然数据（品牌，型号和出厂日期）属于内在数据，而所有权数据（车主姓名，车牌号和最近登记日期）则属于外在数据。这意味着对于品牌，型号和出厂日期的每一种组合，只需要一个汽车对象就行，这个数目还是不少，不过与之前相比已经少了几个数量级。每个品牌-型号=出厂日期组合对应的那个实例将被所有该类型汽车的车主共享。下面是新版Car类的代码：
+
+``` javascript
+var Car = function (make, model, year) {
+    this.make = make;
+    this.model = model;
+    this.year = year;
+};
+
+Car.prototype = {
+     getMake: function () {
+         return this.make;
+     },
+     getModel: function () {
+         return this.model;
+     },
+     getYear: function () {
+         return this.year;
+     }
+ };
+```
+
+上面的代码删除了所有外在数据。所有处理登记事宜的方法都被转移到一个管理其对象中（不过，也可以将这些方法留在原地，并为其增加对应于各种外在数据的参数）。因为现在对象的数据已被分为两大部分，所以必须用工厂来实例化它。
+
+ 用工厂进行实例化，这个工厂很简单。它会检查之前是否已经创建过对应于指定品牌-型号-出厂日期组合的汽车，如果存在这样的汽车那就返回它，否则创建一辆新车，并把它包村起来供以后使用。这就确保了对应于每个唯一的内在状态，只会创建一个实例：
+
+``` javascript
+
+var CarFactory = (function () {
+	 // 实例池
+     var createdCars = {};
+ 
+     return {
+         /**
+          * 工厂方法
+          * @param make 品牌
+          * @param model 型号
+          * @param year 出厂日期
+          * @return new Car()
+          */
+         createCar: function (make, model, year) {
+             if (createdCars[make + '-' + model + '-' + year]) {
+                 return createdCars[make + '-' + model + '-' + year];
+             } else {
+                 var car = new Car(make, model, year);
+                 createdCars[make + '-' + model + '-' + year] = car;
+                 return car;
+             }
+         }
+     };
+ })();
+
+```
+
+
+封装在管理器中的外在状态要完成这种优化还需要一个对象。所有那些从Car对象中删除的数据必须有个保存地点，我们用一个单体来做封装这些数据的管理器。原先的每一个Car对象现在都被分割为外在数据及其所属的共享汽车对象的引用这样两部分。Car对象与车主数据的组合称为汽车记录（car record）。管理器存储着这两方面的信息。它还包含着从原先的Car类删除的方法：
+
+``` javascript
+var CarRecordManager = (function () {
+     var carRecordDatabase = {};
+ 
+     return {
+         // Add a new car record into the city's system
+         addCarRecord: function (make, model, year, owner, tag, renewDate) {
+             var car = CarFactory.createCar(make, model, year);
+             carRecordDatabase[tag] = {
+                 owner: owner,
+                 renewDate: renewDate,
+                 car: car
+             };
+         },
+         // Methods previously contained in the Car class.
+         transferOwnership: function (tag, newOwner, newTag, newRenewDate) {
+             var record = carRecordDatabase[tag];
+             record.owner = newOwner;
+             record.tag = newTag;
+             record.renewDate = newRenewDate;
+         },
+         renewRegistration: function (tag, newRenewDate) {
+             carRecordDatabase[tag].renewDate = newRenewDate;
+         },
+         isRegistrationCurrent: function (tag) {
+             var today = new Date();
+             return today.getTime() < Date.parse(carRecordDatabase[tag].renewDate);
+         }
+     };
+ })();
+```
+
+从Car类剥离的所有数据现在都保存在CarRecordManager这个单体的私用属性carRecordDatabase中。这个carRecordDatabase对象要比以前使用的一大批对象高效得多。那些处理所有权事宜的方法现在也被封装在这个单体中，因为他们处理的都是外在数据。可以看出，这种优化是以复杂为代价的。原先有的只是一个类，而现在却变成了一个类和两个单体对象。把一个对象的数据保存在两个不同的地方这种做法有点令人困惑，但与所解决的性能问题相比，这两点都只是小问题。如果运用得当，那么享元模式能够显著的提升程序的性能。
+
+
+管理享元对象的外在数据有许多不同方法。使用管理器对象是一种常见做法，这种对象有一个集中管理的数据库（centralized database），用于存放外在状态及其所属的享元对象。汽车登记示例就采用了这种方案。其优点在于简单，容易维护。这也是一种比较轻便的方案，因为用来保存外在数据的只是一个数组或对象字面量。
+
+
+
+
+
 ## 建造者模式
 
 工厂模式可有效的创建可复用的实例对象，关心的是最终创建的对象是什么，不关心创建的过程，因此通过工厂模式得到的都是对象实例或者类簇。建造者模式相对比工厂模式复杂一些，关心的是创建对象的过程，例如之前的工厂模式我们关心的创建一个Person类，创建它的共同基本信息，例如name和age以及job等，但是建造者模式不仅要关注Person类的创建过程，还要关注这个Person更多细节，比如穿什么衣服，兴趣爱好是什么，在创建Person类实例对象的基础上，还可以自由组合其他更多信息。
@@ -763,99 +1519,6 @@ person : Person {
 ```
 > 创建的对象更复杂，是一个复合对象。
 
-
-## 原型模式
-
-原型模式可以让多个构造函数对应的实例对象共享同一个原型对象的属性和方法，具体查看[ES5中类的继承](https://ziyi2.github.io/2018/06/05/js%E7%B1%BB%E5%92%8C%E7%BB%A7%E6%89%BF.html#more)。
-
-
-如果创建实例对象的构造函数相对复杂，耗时较长，此时可以不用new关键字去复制这些基类，可以通过这些对象属性或方法进行复制来实现创造，这是原型模式最初的思想，通过原型继承的特点，首先创建一个原型模式的对象复制方法
-
-``` javascript
-
-// 基于已经存在的模板对象克隆新对象
-// 需要注意模板引用类型的属性进行了浅复制
-// 因此模板对象中的数组类型数据会被所有实例对象共享引用
-function prototypeExtend() {
-  var F = function() {},
-      args = arguments,
-      i = 0,
-      len = arguments.length
-
-  for(; i<len; i++) {
-    for(var key in arguments[i]) {
-      F.prototype[key] = arguments[i][key]
-    }
-  }   
-  return new F()
-}
-
-
-let person = prototypeExtend({
-  name: '111',
-  age: 28
-}, {
-  getName: function() {
-    return this.name
-  }
-}, {
-  getAge: function() {
-    return this.age
-  }
-})
-
-console.log(person.name)
-console.log(person.getName())
-```
-
-## 外观模式
-
-为复杂的子系统借口提供更高级统一接口，通过这个接口使得对子系统接口的访问更容易，在JavaScript中有时也会用于对底层结构兼容性做统一封装来简化用户使用。
-
-``` javascript
-var Browser = {
-  event: {
-    add: function(dom, type, fn) {
-      if(dom.addEventListener) {
-        dom.addEventListener(type, fn, false)
-      } else if(dom.attachEvent) {
-        dom.attachEvent('on'+type, fn)
-      } else {
-        dom['on'+ type] = fn
-      }
-    },
-
-    remove: function() {
-      // ...
-    },
-
-    self: function(event) {
-      return event || window.event
-    },
-
-    target: function(event) {
-      return event.target || event.srcElement
-    },
-
-    preventDefault: function(event) {
-      let event = this.event.self(event)
-      event.preventDefault 
-      ? event.preventDefault() 
-      : event.returnValue = false
-    }
-  },
-
-  id: function(dom, id) {
-    return dom.getElementById(id)
-  },
-
-  html: function(dom, id, html) {
-    this.id(dom, id).innerHTML = html
-  }
-}
-```
-
-> 通过外观模式对接口的二次封装隐藏其复杂性，可以简化用户的使用。
 
 
 ## 适配器模式
