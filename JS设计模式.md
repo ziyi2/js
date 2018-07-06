@@ -1411,8 +1411,6 @@ var CarRecordManager = (function () {
 
 
 
-
-
 ## 建造者模式
 
 工厂模式可有效的创建可复用的实例对象，关心的是最终创建的对象是什么，不关心创建的过程，因此通过工厂模式得到的都是对象实例或者类簇。建造者模式相对比工厂模式复杂一些，关心的是创建对象的过程，例如之前的工厂模式我们关心的创建一个Person类，创建它的共同基本信息，例如name和age以及job等，但是建造者模式不仅要关注Person类的创建过程，还要关注这个Person更多细节，比如穿什么衣服，兴趣爱好是什么，在创建Person类实例对象的基础上，还可以自由组合其他更多信息。
@@ -1577,4 +1575,29 @@ function adapter(obj) {
 
 
 
+## MV*
 
+### MVC
+
+
+
+MVC是一种架构设计模式，通过关注点分离鼓励改进引用程序组织。它强制将业务数据（Model）、用户界面（View）隔离，并将控制器（Controller）用于管理逻辑和用户输入。在JavaScript中的MVC框架包括Backbone、Ember.js和AngularJS。
+
+![MVC](https://raw.githubusercontent.com/ziyi2/js/master/images/MVC.png)
+
+
+MVC有利于简化应用程序功能的模块化。
+- 整体维护更容易。
+- 解耦Model和View。
+- 消除Model和Controlle的代码重复。
+
+
+### Model
+
+代表特定的数据，当Model改变时，会发布信息。一般要求数据可持久化，保存在内存中、用户的localStorage数据存储中或者数据库中。Model主要和业务数据相关。
+
+### View
+描绘Model当前状态，会订阅Model更新或修改的信息，从而做出View的更新。一个View通常订阅一个Model，用户与View进行交互，包括读取和编辑Model。
+
+### Controller
+处理用户交互，为View做决定，是Model和View的中介。当用户操作View时，通常用于更新Model。
