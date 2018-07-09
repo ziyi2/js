@@ -1581,7 +1581,7 @@ function adapter(obj) {
 
 
 
-MVC是一种架构设计模式，通过关注点分离鼓励改进引用程序组织。它强制将业务数据（Model）、用户界面（View）隔离，并将控制器（Controller）用于管理逻辑和用户输入。在JavaScript中的MVC框架包括Backbone、Ember.js和AngularJS。
+MVC（模型-视图-控制器）是一种架构设计模式，通过关注点分离鼓励改进引用程序组织。它强制将业务数据（Model）、用户界面（View）隔离，并将控制器（Controller）用于管理逻辑和用户输入。在JavaScript中的MVC框架包括Backbone、Ember.js和AngularJS。
 
 ![MVC](https://raw.githubusercontent.com/ziyi2/js/master/images/MVC.png)
 
@@ -1592,12 +1592,100 @@ MVC有利于简化应用程序功能的模块化。
 - 消除Model和Controlle的代码重复。
 
 
-### Model
+#### Model
 
-代表特定的数据，当Model改变时，会发布信息。一般要求数据可持久化，保存在内存中、用户的localStorage数据存储中或者数据库中。Model主要和业务数据相关。
+代表特定的数据，当Model改变时，会通过观察者模式发布信息。一般要求数据可持久化，保存在内存中、用户的localStorage数据存储中或者数据库中。Model主要和业务数据相关。
 
-### View
-描绘Model当前状态，会订阅Model更新或修改的信息，从而做出View的更新。一个View通常订阅一个Model，用户与View进行交互，包括读取和编辑Model。
+#### View
+描绘Model当前状态，会通过观察者模式订阅Model更新或修改的信息，从而做出View的更新。一个View通常订阅一个Model，用户与View进行交互，包括读取和编辑Model。
 
-### Controller
+#### Controller
 处理用户交互，为View做决定，是Model和View的中介。当用户操作View时，通常用于更新Model。
+
+
+#### 优点
+
+- MVC有利于简化应用程序功能的模块化。
+- 解耦Model和View。
+- 消除Model和Controlle的代码重复。
+
+#### 缺点
+- Controller测试困难。因为视图同步操作是由View自己执行，而View只能在有UI的环境下运行。在没有UI环境下对Controller进行单元测试的时候，Controller业务逻辑的正确性是无法验证的：Controller更新Model的时候，无法对View的更新操作进行断言。
+- View无法组件化。View是强依赖特定的Model的，如果需要把这个View抽出来作为一个另外一个应用程序可复用的组件就困难了。因为不同程序的的Domain Model是不一样的
+
+
+
+### MVC Model 2
+
+在Web服务端开发的时候也会接触到MVC模式，而这种MVC模式不能严格称为MVC模式。经典的MVC模式只是解决客户端图形界面应用程序的问题，而对服务端无效。服务端的MVC模式又自己特定的名字：MVC Model 2，或者叫JSP Model 2，或者直接就是Model 2 。Model 2客户端服务端的交互模式如下：
+
+![MVC Model2](https://raw.githubusercontent.com/ziyi2/js/master/images/MVC%20Model2.png)
+
+
+服务端接收到来自客户端的请求，服务端通过路由规则把这个请求交由给特定的Controller进行处理，Controller执行相应的业务逻辑，对数据库数据（Model）进行操作，然后用数据去渲染特定的模版，返回给客户端。
+
+因为HTTP协议是单工协议并且是无状态的，服务器无法直接给客户端推送数据。除非客户端再次发起请求，否则服务器端的Model的变更就无法告知客户端。所以可以看到经典的Smalltalk-80 MVC中Model通过观察者模式告知View更新这一环被无情地打破，不能称为严格的MVC。
+
+Model 2模式最早在1998年应用在JSP应用程序当中，JSP Model 1应用管理的混乱诱发了JSP参考了客户端MVC模式，催生了Model 2。
+
+
+![MVC Model](https://raw.githubusercontent.com/ziyi2/js/master/images/MVC%20Model.png)
+
+后来这种模式几乎被应用在所有语言的Web开发框架当中。PHP的ThinkPHP，Python的Dijango、Flask，NodeJS的Express，Ruby的RoR，基本都采纳了这种模式。平常所讲的MVC基本是这种服务端的MVC。
+
+
+### MVP
+
+MVP（模型-视图-表示器）是MVC设计模式的一种衍生模式，专注于改进表示逻辑。MVP打破了View原来对于Model的依赖，其余的依赖关系和MVC模式一致。
+
+
+![MVP](https://raw.githubusercontent.com/ziyi2/js/master/images/MVP.png)
+
+
+和MVC模式一样，用户对View的操作都会从View交移给Presenter。Presenter同样的会执行相应的业务逻辑，并且对Model进行相应的操作；而这时候Model也是通过观察者模式把自己变更的消息传递出去，但是传给Presenter而不是View。Presenter获取到Model变更的消息以后，通过View提供的接口更新界面。
+
+
+对比在MVC中，Controller是不能操作View的，View也没有提供相应的接口；而在MVP当中，Presenter可以操作View，View需要提供一组对界面操作的接口给Presenter进行调用；Model仍然通过事件广播自己的变更，但由Presenter监听而不是View。
+
+
+
+#### 优点
+
+- 便于测试。Presenter对View是通过接口进行，在对Presenter进行不依赖UI环境的单元测试的时候。可以通过Mock一个View对象，这个对象只需要实现了View的接口即可。然后依赖注入到Presenter中，单元测试的时候就可以完整的测试Presenter业务逻辑的正确性。这里根据上面的例子给出了Presenter的单元测试样例。
+
+- View可以进行组件化。在MVP当中，View不依赖Model。这样就可以让View从特定的业务场景中脱离出来，可以说View可以做到对业务逻辑完全无知。它只需要提供一系列接口提供给上层操作。这样就可以做高度可复用的View组件。
+
+
+#### 缺点
+
+- Presenter中除了业务逻辑以外，还有大量的View->Model，Model->View的手动同步逻辑，造成Presenter比较笨重，维护起来会比较困难。
+
+### MVVM
+
+MVVM可以看作是一种特殊的MVP（Passive View）模式，或者说是对MVP模式的一种改良。
+
+MVVM代表的是Model-View-ViewModel，这里需要解释一下什么是ViewModel。ViewModel的含义就是 "Model of View"，视图的模型。它的含义包含了领域模型（Domain Model）和视图的状态（State）。 在图形界面应用程序当中，界面所提供的信息可能不仅仅包含应用程序的领域模型。还可能包含一些领域模型不包含的视图状态，例如电子表格程序上需要显示当前排序的状态是顺序的还是逆序的，而这是Domain Model所不包含的，但也是需要显示的信息。
+
+可以简单把ViewModel理解为页面上所显示内容的数据抽象，和Domain Model不一样，ViewModel更适合用来描述View。
+
+
+![MVVM](https://raw.githubusercontent.com/ziyi2/js/master/images/MVVM.png)
+
+
+MVVM的调用关系和MVP一样。但是，在ViewModel当中会有一个叫Binder，或者是Data-binding engine的东西。以前全部由Presenter负责的View和Model之间数据同步操作交由给Binder处理。你只需要在View的模版语法当中，指令式地声明View上的显示的内容是和Model的哪一块数据绑定的。当ViewModel对进行Model更新的时候，Binder会自动把数据更新到View上去，当用户对View进行操作（例如表单输入），Binder也会自动把数据更新到Model上去。这种方式称为：Two-way data-binding，双向数据绑定。可以简单而不恰当地理解为一个模版引擎，但是会根据数据变更实时渲染。
+
+
+也就是说，MVVM把View和Model的同步逻辑自动化了。以前Presenter负责的View和Model同步不再手动地进行操作，而是交由框架所提供的Binder进行负责。只需要告诉Binder，View显示的数据对应的是Model哪一部分即可。
+
+
+#### 优点
+
+- 提高可维护性。解决了MVP大量的手动View和Model同步的问题，提供双向绑定机制。提高了代码的可维护性。
+- 简化测试。因为同步逻辑是交由Binder做的，View跟着Model同时变更，所以只需要保证Model的正确性，View就正确。大大减少了对View同步更新的测试。
+
+
+#### 缺点
+
+- 过于简单的图形界面不适用，或说牛刀杀鸡。
+- 对于大型的图形应用程序，视图状态较多，ViewModel的构建和维护的成本都会比较高。
+- 数据绑定的声明是指令式地写在View的模版当中的，这些内容是没办法去打断点debug的。
